@@ -1,7 +1,7 @@
-package net.sharksystem.asap;
+package com.example.demo.net.sharksystem.asap;
 
-import net.sharksystem.crypto.ASAPCryptoAlgorithms;
-import net.sharksystem.crypto.BasicCryptoKeyStorage;
+import com.example.demo.net.sharksystem.crypto.ASAPCryptoAlgorithms;
+import com.example.demo.net.sharksystem.crypto.BasicCryptoKeyStorage;
 import org.junit.Assert;
 import org.junit.Test;
 

@@ -1,7 +1,7 @@
-package net.sharksystem.asap;
+package com.example.demo.net.sharksystem.asap;
 
-import net.sharksystem.asap.apps.*;
-import net.sharksystem.cmdline.TCPStream;
+import com.example.demo.net.sharksystem.asap.apps.*;
+import com.example.demo.net.sharksystem.cmdline.TCPStream;
 import org.junit.Assert;
 import org.junit.Test;
 

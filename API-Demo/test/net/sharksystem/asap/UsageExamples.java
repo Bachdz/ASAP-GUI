@@ -1,9 +1,9 @@
-package net.sharksystem.asap;
+package com.example.demo.net.sharksystem.asap;
 
-import net.sharksystem.asap.util.ASAPPeerHandleConnectionThread;
-import net.sharksystem.asap.util.Helper;
-import net.sharksystem.cmdline.ExampleASAPChunkReceivedListener;
-import net.sharksystem.cmdline.TCPStream;
+import com.example.demo.net.sharksystem.asap.util.ASAPPeerHandleConnectionThread;
+import com.example.demo.net.sharksystem.asap.util.Helper;
+import com.example.demo.net.sharksystem.cmdline.ExampleASAPChunkReceivedListener;
+import com.example.demo.net.sharksystem.cmdline.TCPStream;
 import org.junit.Assert;
 import org.junit.Test;
 

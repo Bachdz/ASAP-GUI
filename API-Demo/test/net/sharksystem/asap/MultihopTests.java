@@ -1,6 +1,6 @@
-package net.sharksystem.asap;
+package com.example.demo.net.sharksystem.asap;
 
-import net.sharksystem.cmdline.CmdLineUI;
+import com.example.demo.net.sharksystem.cmdline.CmdLineUI;
 import org.junit.Assert;
 import org.junit.Test;
 

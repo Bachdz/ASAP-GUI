@@ -1,12 +1,12 @@
-package net.sharksystem.asap.sharknet;
+package com.example.demo.net.sharksystem.asap.sharknet;
 
-import net.sharksystem.asap.ASAPEngineFS;
-import net.sharksystem.asap.ASAPException;
-import net.sharksystem.asap.ASAPSecurityException;
-import net.sharksystem.asap.util.ASAPPeerHandleConnectionThread;
-import net.sharksystem.cmdline.TCPStream;
-import net.sharksystem.crypto.BasicCryptoKeyStorage;
-import net.sharksystem.crypto.BasicCryptoParameters;
+import com.example.demo.net.sharksystem.asap.ASAPEngineFS;
+import com.example.demo.net.sharksystem.asap.ASAPException;
+import com.example.demo.net.sharksystem.asap.ASAPSecurityException;
+import com.example.demo.net.sharksystem.asap.util.ASAPPeerHandleConnectionThread;
+import com.example.demo.net.sharksystem.cmdline.TCPStream;
+import com.example.demo.net.sharksystem.crypto.BasicCryptoKeyStorage;
+import com.example.demo.net.sharksystem.crypto.BasicCryptoParameters;
 import org.junit.Assert;
 import org.junit.Test;
 

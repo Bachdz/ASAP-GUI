@@ -1,7 +1,7 @@
-package net.sharksystem.asap;
+package com.example.demo.net.sharksystem.asap;
 
-import net.sharksystem.asap.protocol.PDUTests;
-import net.sharksystem.asap.sharknet.SharkNetMessageASAPSerializationTests;
+import com.example.demo.net.sharksystem.asap.protocol.PDUTests;
+import com.example.demo.net.sharksystem.asap.sharknet.SharkNetMessageASAPSerializationTests;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 

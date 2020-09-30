@@ -1,8 +1,8 @@
-package net.sharksystem.asap.protocol;
+package com.example.demo.net.sharksystem.asap.protocol;
 
-import net.sharksystem.asap.ASAPException;
-import net.sharksystem.asap.ASAPSecurityException;
-import net.sharksystem.crypto.BasicCryptoKeyStorage;
+import com.example.demo.net.sharksystem.asap.ASAPException;
+import com.example.demo.net.sharksystem.asap.ASAPSecurityException;
+import com.example.demo.net.sharksystem.crypto.BasicCryptoKeyStorage;
 import org.junit.Assert;
 import org.junit.Test;
 

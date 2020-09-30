@@ -1,4 +1,4 @@
-package net.sharksystem.asap;
+package com.example.demo.net.sharksystem.asap;
 
 import org.junit.Assert;
 import org.junit.Test;

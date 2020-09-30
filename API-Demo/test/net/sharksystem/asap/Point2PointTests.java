@@ -1,12 +1,12 @@
-package net.sharksystem.asap;
+package com.example.demo.net.sharksystem.asap;
 
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 
-import net.sharksystem.asap.util.ASAPChunkReceivedTester;
-import net.sharksystem.asap.util.ASAPPeerHandleConnectionThread;
-import net.sharksystem.cmdline.TCPStream;
+import com.example.demo.net.sharksystem.asap.util.ASAPChunkReceivedTester;
+import com.example.demo.net.sharksystem.asap.util.ASAPPeerHandleConnectionThread;
+import com.example.demo.net.sharksystem.cmdline.TCPStream;
 import org.junit.Test;
 import org.junit.Assert;
 

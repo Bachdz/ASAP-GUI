@@ -1,6 +1,6 @@
-package net.sharksystem.asap;
+package com.example.demo.net.sharksystem.asap;
 
-import net.sharksystem.asap.util.Batchprocessor;
+import com.example.demo.net.sharksystem.asap.util.Batchprocessor;
 import org.junit.Assert;
 import org.junit.Test;
 

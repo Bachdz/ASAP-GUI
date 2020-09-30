@@ -1,9 +1,9 @@
-package net.sharksystem.asap;
+package com.example.demo.net.sharksystem.asap;
 
-import net.sharksystem.asap.util.ASAPPeerHandleConnectionThread;
-import net.sharksystem.cmdline.ExampleASAPChunkReceivedListener;
-import net.sharksystem.cmdline.TCPStream;
-import net.sharksystem.crypto.BasicCryptoKeyStorage;
+import com.example.demo.net.sharksystem.asap.util.ASAPPeerHandleConnectionThread;
+import com.example.demo.net.sharksystem.cmdline.ExampleASAPChunkReceivedListener;
+import com.example.demo.net.sharksystem.cmdline.TCPStream;
+import com.example.demo.net.sharksystem.crypto.BasicCryptoKeyStorage;
 import org.junit.Test;
 
 import java.io.IOException;
