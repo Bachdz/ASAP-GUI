@@ -23,9 +23,15 @@ public class ServiceController {
 
 
 
-    @PostMapping
-    public void createPeer (@Valid @NonNull @RequestParam("peer") String name) throws ASAPException {
+    @PostMapping(path = "/peer")
+    public void createPeer (@Valid @NonNull @RequestParam("name") String name) throws ASAPException {
         cmdService.doCreateASAPPeer(name);
+    }
+
+
+    @PostMapping(path = "/app")
+    public void createApp (@Valid @NonNull @RequestParam("peer") String name, @RequestParam("app") String app) throws ASAPException {
+        cmdService.doCreateASAPApp(name,app);
     }
 
 

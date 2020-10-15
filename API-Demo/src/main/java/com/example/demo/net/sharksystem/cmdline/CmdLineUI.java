@@ -46,7 +46,7 @@ public class CmdLineUI {
         CmdLineUI userCmd = new CmdLineUI(os, System.in);
 
         userCmd.printUsage();
-        userCmd.runCommandLoop();
+       //userCmd.runCommandLoop();
     }
 
     public CmdLineUI(PrintStream out) throws IOException, ASAPException {
@@ -241,10 +241,10 @@ public class CmdLineUI {
         this.standardOut = os;
         this.userInput = is != null ? new BufferedReader(new InputStreamReader(is)) : null;
 
-        this.runCommandLoop();
+        // this.runCommandLoop();
     }
 
-    public void runCommandLoop() {
+    /*public void runCommandLoop() {
         boolean again = true;
 
         while(again) {
@@ -327,7 +327,7 @@ public class CmdLineUI {
                 this.cmds.add(cmdLineString);
             }
         }
-    }
+    }*/
 
     private Map<String, TCPStream> streams = new HashMap<>();
     private long waitPeriod = 1000*30; // 30 seconds
@@ -521,12 +521,12 @@ public class CmdLineUI {
         }
     }
 
-    public void doCreateASAPApp(String parameterString) throws ASAPException {
-        StringTokenizer st = new StringTokenizer(parameterString);
+    public void doCreateASAPApp(String peer, String appName) throws ASAPException {
+      //  StringTokenizer st = new StringTokenizer(parameterString);
 
         try {
-            String peer = st.nextToken();
-            String appName = st.nextToken();
+           /* String peer = st.nextToken();
+            String appName = st.nextToken();*/
 
             ASAPPeer asapPeer = this.peers.get(peer);
             if(asapPeer != null) {
