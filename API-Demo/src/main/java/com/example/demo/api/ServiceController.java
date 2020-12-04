@@ -1,36 +1,50 @@
 package com.example.demo.api;
 
 import com.example.demo.net.sharksystem.asap.ASAPException;
-import com.example.demo.net.sharksystem.cmdline.CmdLineUI;
+import com.example.demo.net.sharksystem.asap.ASAPPeer;
+import com.example.demo.net.sharksystem.cmdline.ASAPService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.NonNull;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @RequestMapping("api/v1/asap")
 @RestController
 public class ServiceController {
 
     @Autowired
-    private final CmdLineUI cmdService;
+    private final ASAPService asapService;
 
     @Autowired
-    public ServiceController(CmdLineUI cmdService) {
-        this.cmdService = cmdService;
+    public ServiceController(ASAPService asapService) {
+        this.asapService = asapService;
     }
 
 
 
     @PostMapping(path = "/peer")
     public void createPeer (@Valid @NonNull @RequestParam("name") String name) throws ASAPException {
-        cmdService.doCreateASAPPeer(name);
+        asapService.doCreateASAPPeer(name);
     }
 
 
     @PostMapping(path = "/app")
     public void createApp (@Valid @NonNull @RequestParam("peer") String name, @RequestParam("app") String app) throws ASAPException {
-        cmdService.doCreateASAPApp(name,app);
+        asapService.doCreateASAPApp(name,app);
+    }
+
+    @GetMapping(path = "/peers")
+    public Map<String, String> getPeers () {
+        Map<String, String> peers = new HashMap<>();
+        List<String> peerStorage= asapService.getPeers();
+        for(String peerName : peerStorage) {
+            peers.put("name",peerName);
+        }
+        return peers;
     }
 
 
