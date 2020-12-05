@@ -38,9 +38,10 @@ public class ASAPService {
     public List<String> getPeers() {
         List<String> peersName = new ArrayList<>();
         for(String peerName : this.peers.keySet()) {
-            System.out.println(this.peers.keySet());
+
             peersName.add(peerName);
         }
+        System.out.println(peersName);
         return peersName;
     }
 
@@ -68,9 +69,8 @@ public class ASAPService {
      * @throws IOException
      * @throws ASAPException
      */
-    public ASAPService() {
-        this.doResetASAPStorages();
-
+    public ASAPService() throws IOException, ASAPException {
+        this.doInitializeASAPStorages();
     }
 
     public ASAPService(PrintStream os, InputStream is) throws IOException, ASAPException {
@@ -609,11 +609,37 @@ public class ASAPService {
         }
     }
 
-    public void doResetASAPStorages() {
+    public void doResetASAPStorages() throws Error{
+        try {
+            ASAPEngineFS.removeFolder(PEERS_ROOT_FOLDER);
+            File rootFolder = new File(PEERS_ROOT_FOLDER);
+            rootFolder.mkdirs();
+            peers.clear();
+        } catch (Error e) {
+            System.out.println("Hier" + e);
+            throw new Error();
+        }
+    }
+
+    public void doInitializeASAPStorages () throws IOException, ASAPException{
+        // set up peers
+        File rootFolder = new File(PEERS_ROOT_FOLDER);
+        if(rootFolder.exists()) {
+            // each root folder is a peer - per definition in this very application
+            String[] peerNames = rootFolder.list();
+
+            // set up peers
+            for(String peerName : peerNames) {
+                this.createPeer(peerName);
+            }
+        }
+    }
+
+ /*   public void doResetASAPStorages() {
         ASAPEngineFS.removeFolder(PEERS_ROOT_FOLDER);
         File rootFolder = new File(PEERS_ROOT_FOLDER);
         rootFolder.mkdirs();
-    }
+    }*/
 
     public void doSetSendReceivedMessage(String parameterString) throws ASAPException {
         StringTokenizer st = new StringTokenizer(parameterString);

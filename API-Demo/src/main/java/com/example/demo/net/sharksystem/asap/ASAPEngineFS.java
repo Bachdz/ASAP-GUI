@@ -239,7 +239,7 @@ public class ASAPEngineFS extends ASAPEngine {
     //                                         helper                                     //
     ////////////////////////////////////////////////////////////////////////////////////////
 
-    public static void removeFolder(String eraPathName) {
+    public static void removeFolder(String eraPathName) throws Error {
         File dir = new File(eraPathName);
 
         String[] dirEntries = dir.list();
@@ -253,6 +253,7 @@ public class ASAPEngineFS extends ASAPEngine {
                     try {
                         if(!fileInDir.delete()) {
                             System.out.println("ASAPEngineFS: cannot delete file (try deleteOnExit):" + fileInDir);
+                            throw new Error();
                         }
                     } catch (RuntimeException e) {
                         System.err.println("ASAPEngineFS: cannot file:" + e.getLocalizedMessage());
