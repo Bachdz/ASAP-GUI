@@ -1,6 +1,7 @@
 package com.example.demo.api;
 
 import com.example.demo.model.Peer;
+import com.example.demo.model.Storage;
 import com.example.demo.net.sharksystem.asap.ASAPException;
 import com.example.demo.net.sharksystem.asap.ASAPPeer;
 import com.example.demo.net.sharksystem.cmdline.ASAPService;
@@ -44,12 +45,12 @@ public class ServiceController {
     }
 
 
-    @PostMapping(path = "/app")
+/*    @PostMapping(path = "/app")
     public void createApp (@Valid @NonNull @RequestParam("peer") String name, @RequestParam("app") String app) throws ASAPException {
 
             asapService.doCreateASAPApp(name, app);
 
-    }
+    }*/
 
     @GetMapping(path = "/peers")
     public List<Peer> getPeers () {
@@ -69,6 +70,18 @@ public class ServiceController {
         } catch (Error e) {
             return false;
         }
+    }
+
+
+    @GetMapping(path = "/storages")
+    public List<Storage> getStorages (@Valid @NonNull @NotBlank @RequestParam(value = "peer", required = true) String peer) {
+        List<CharSequence> storage= asapService.getStorages(peer);
+        List<Storage> returnStorage = new ArrayList<Storage>() ;
+        for(CharSequence temp : storage) {
+            Storage unit = new Storage(temp);
+            returnStorage.add(unit);
+        }
+        return returnStorage;
     }
 
 

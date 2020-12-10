@@ -45,6 +45,16 @@ public class ASAPService {
         return peersName;
     }
 
+
+    public List<CharSequence> getStorages(String peername) {
+        List<CharSequence> storages = new ArrayList<>();
+        ASAPPeer asapPeer = this.peers.get(peername);
+        for (CharSequence format : asapPeer.getFormats()) {
+            storages.add(format);
+        }
+            return storages;
+    }
+
 //    public static void main(String[] args) throws IOException, ASAPException {
 //        PrintStream os = System.out;
 //
@@ -55,101 +65,16 @@ public class ASAPService {
 //        //userCmd.runCommandLoop();
 //    }
 
-    public ASAPService(PrintStream out) throws IOException, ASAPException {
-        this(out, null);
-    }
 
     public void setOutStreams(PrintStream ps) {
         this.standardOut = ps;
         this.standardError = ps;
     }
 
-    /**
-     * only for batch processing - removes anything from the past
-     * @throws IOException
-     * @throws ASAPException
-     */
+
     public ASAPService() throws IOException, ASAPException {
         this.doInitializeASAPStorages();
     }
-
-    public ASAPService(PrintStream os, InputStream is) throws IOException, ASAPException {
-        this.standardOut = os;
-        this.userInput = is != null ? new BufferedReader(new InputStreamReader(is)) : null;
-
-        // set up peers
-        File rootFolder = new File(PEERS_ROOT_FOLDER);
-        if(rootFolder.exists()) {
-            // each root folder is a peer - per definition in this very application
-            String[] peerNames = rootFolder.list();
-
-            // set up peers
-            for(String peerName : peerNames) {
-                this.createPeer(peerName);
-            }
-        }
-    }
-
-//    public void printUsage() {
-//        StringBuilder b = new StringBuilder();
-//
-//        b.append("\n");
-//        b.append("\n");
-//        b.append("valid commands:");
-//        b.append("\n");
-//        b.append(CONNECT);
-//        b.append(".. connect to remote engine");
-//        b.append("\n");
-//        b.append(OPEN);
-//        b.append(".. open socket");
-//        b.append("\n");
-//        b.append(LIST);
-//        b.append(".. list open connections");
-//        b.append("\n");
-//        b.append(KILL);
-//        b.append(".. kill an open connection");
-//        b.append("\n");
-//        b.append(SETWAITING);
-//        b.append(".. set waiting period");
-//        b.append("\n");
-//        b.append(CREATE_ASAP_PEER);
-//        b.append(".. create new asap peer");
-//        b.append("\n");
-//        b.append(CREATE_ASAP_APP);
-//        b.append(".. create new asap app (==engine)");
-//        b.append("\n");
-//        b.append(CREATE_ASAP_CHANNEL);
-//        b.append(".. create new closed asap channel");
-//        b.append("\n");
-//        b.append(CREATE_ASAP_MESSAGE);
-//        b.append(".. add message to engine");
-//        b.append("\n");
-//        b.append(RESET_ASAP_STORAGES);
-//        b.append(".. removes all asap engines");
-//        b.append("\n");
-//        b.append(SET_SEND_RECEIVED_MESSAGES);
-//        b.append(".. set whether received message are to be sent");
-//        b.append("\n");
-//        b.append(PRINT_ALL_INFORMATION);
-//        b.append(".. print general information of peers");
-//        b.append("\n");
-//        b.append(PRINT_STORAGE_INFORMATION);
-//        b.append(".. print general information about a storage");
-//        b.append("\n");
-//        b.append(PRINT_CHANNEL_INFORMATION);
-//        b.append(".. print general information about a channel");
-//        b.append("\n");
-//        b.append(SLEEP);
-//        b.append(".. sleep some milliseconds - helps writing batch programs");
-//        b.append("\n");
-//        b.append(SHOW_LOG);
-//        b.append(".. print log of entered commands of this session");
-//        b.append("\n");
-//        b.append(EXIT);
-//        b.append(".. exit");
-//
-//        this.standardOut.println(b.toString());
-//    }
 
     public void printUsage(String cmdString, String comment) throws ASAPException {
         PrintStream out = this.standardOut;
@@ -250,90 +175,6 @@ public class ASAPService {
         // this.runCommandLoop();
     }
 
-    /*public void runCommandLoop() {
-        boolean again = true;
-
-        while(again) {
-            boolean rememberCommand = true;
-            String cmdLineString = null;
-
-            try {
-                // read user input
-                cmdLineString = userInput.readLine();
-
-                // finish that loop if less than nothing came in
-                if(cmdLineString == null) break;
-
-                // trim whitespaces on both sides
-                cmdLineString = cmdLineString.trim();
-
-                // extract command
-                int spaceIndex = cmdLineString.indexOf(' ');
-                spaceIndex = spaceIndex != -1 ? spaceIndex : cmdLineString.length();
-
-                // got command string
-                String commandString = cmdLineString.substring(0, spaceIndex);
-
-                // extract parameters string - can be empty
-                String parameterString = cmdLineString.substring(spaceIndex);
-                parameterString = parameterString.trim();
-
-                // start command loop
-                switch(commandString) {
-                    case CONNECT:
-                        this.doConnect(parameterString); break;
-                    case OPEN:
-                        this.doOpen(parameterString); break;
-                    case LIST:
-                        this.doList(); break;
-                    case KILL:
-                        this.doKill(parameterString); break;
-                    case SETWAITING:
-                        this.doSetWaiting(parameterString); break;
-                    case CREATE_ASAP_PEER:
-                        this.doCreateASAPPeer(parameterString); break;
-                    case CREATE_ASAP_APP: // same
-                        this.doCreateASAPApp(parameterString); break;
-                    case CREATE_ASAP_CHANNEL:
-                        this.doCreateASAPChannel(parameterString); break;
-                    case CREATE_ASAP_MESSAGE:
-                        this.doCreateASAPMessage(parameterString); break;
-                    case RESET_ASAP_STORAGES:
-                        this.doResetASAPStorages(); break;
-                    case SET_SEND_RECEIVED_MESSAGES:
-                        this.doSetSendReceivedMessage(parameterString); break;
-                    case PRINT_CHANNEL_INFORMATION:
-                        this.doPrintChannelInformation(parameterString); break;
-                    case PRINT_STORAGE_INFORMATION:
-                        this.doPrintStorageInformation(parameterString); break;
-                    case SLEEP:
-                        this.doSleep(parameterString); break;
-                    case SHOW_LOG:
-                        this.doShowLog(); rememberCommand = false; break;
-                    case PRINT_ALL_INFORMATION:
-                        this.doPrintAllInformation(); break;
-                    case "q": // convenience
-                    case EXIT:
-                        this.doKill("all");
-                        again = false; break; // end loop
-
-                    default: this.standardError.println("unknown command:" + cmdLineString);
-                        this.printUsage();
-                        rememberCommand = false;
-                        break;
-                }
-            } catch (ASAPException ex) {
-                rememberCommand = false;
-            } catch (IOException ex) {
-                this.standardOut.println("cannot read from input stream");
-                System.exit(0);
-            }
-
-            if(rememberCommand) {
-                this.cmds.add(cmdLineString);
-            }
-        }
-    }*/
 
     private Map<String, TCPStream> streams = new HashMap<>();
     private long waitPeriod = 1000*30; // 30 seconds
@@ -473,48 +314,7 @@ public class ASAPService {
         this.doPrintAllInformation();
     }
 
-    public void doKill(String parameterString) throws ASAPException {
-        StringTokenizer st = new StringTokenizer(parameterString);
 
-        try {
-            String channelName = st.nextToken();
-            if(channelName.equalsIgnoreCase("all")) {
-                this.standardOut.println("kill all open channels..");
-                for(TCPStream channel : this.streams.values()) {
-                    channel.kill();
-                }
-                this.streams = new HashMap<>();
-                this.standardOut.println(".. done");
-            } else {
-
-                TCPStream channel = this.streams.remove(channelName);
-                if (channel == null) {
-                    this.standardError.println("channel does not exist: " + channelName);
-                    return;
-                }
-                this.standardOut.println("kill channel");
-                channel.kill();
-
-                this.standardOut.println(".. done");
-            }
-        }
-        catch(RuntimeException e) {
-            this.printUsage(KILL, e.getLocalizedMessage());
-        }
-    }
-
-    public void doSetWaiting(String parameterString) throws ASAPException {
-        StringTokenizer st = new StringTokenizer(parameterString);
-
-        try {
-            String waitingPeriodString = st.nextToken();
-            long period = Long.parseLong(waitingPeriodString);
-            this.setWaitPeriod(period);
-        }
-        catch(RuntimeException e) {
-            this.printUsage(SETWAITING, e.getLocalizedMessage());
-        }
-    }
 
     public void doCreateASAPPeer(String peerName) throws ASAPException {
 
@@ -528,18 +328,18 @@ public class ASAPService {
         }
     }
 
-    public void doCreateASAPApp(String peer, String appName) throws ASAPException {
+/*    public void doCreateASAPApp(String peer, String appName) throws ASAPException {
         try{
             ASAPPeer asapPeer = this.peers.get(peer);
             if(asapPeer != null) {
 //                ASAPStorage storage = asapPeer.createEngineByFormat(appName);
                 asapPeer.createEngineByFormat(appName);
-                /*
+                *//*
                 if(!storage.isASAPManagementStorageSet()) {
                     storage.setASAPManagementStorage(ASAPEngineFS.getASAPStorage(peer,
                             PEERS_ROOT_FOLDER + "/" + peer + "/ASAPManagement",
                             ASAP_1_0.ASAP_MANAGEMENT_FORMAT));
-                }*/
+                }*//*
             }
         }
         catch(RuntimeException e) {
@@ -547,9 +347,9 @@ public class ASAPService {
         } catch (IOException | ASAPException e) {
             this.printUsage(CREATE_ASAP_APP, e.getLocalizedMessage());
         }
-    }
+    }*/
 
-    public void doCreateASAPChannel(String peerName, String app, String uriString, String[] recip) throws ASAPException {
+/*    public void doCreateASAPChannel(String peerName, String app, String uriString, String[] recip) throws ASAPException {
 //        StringTokenizer st = new StringTokenizer(parameterString);
 
         try {
@@ -583,9 +383,9 @@ public class ASAPService {
         } catch (IOException | ASAPException e) {
             this.printUsage(CREATE_ASAP_CHANNEL, e.getLocalizedMessage());
         }
-    }
+    }*/
 
-    public void doCreateASAPMessage(String parameterString) throws ASAPException {
+/*    public void doCreateASAPMessage(String parameterString) throws ASAPException {
         StringTokenizer st = new StringTokenizer(parameterString);
 
         try {
@@ -607,7 +407,7 @@ public class ASAPService {
         } catch (IOException | ASAPException e) {
             this.printUsage(CREATE_ASAP_MESSAGE, e.getLocalizedMessage());
         }
-    }
+    }*/
 
     public void doResetASAPStorages() throws Error{
         try {
@@ -616,7 +416,8 @@ public class ASAPService {
             rootFolder.mkdirs();
             peers.clear();
         } catch (Error e) {
-            System.out.println("Hier" + e);
+
+           // System.out.println("Hier" + e);
             throw new Error();
         }
     }
@@ -641,6 +442,7 @@ public class ASAPService {
         rootFolder.mkdirs();
     }*/
 
+/*
     public void doSetSendReceivedMessage(String parameterString) throws ASAPException {
         StringTokenizer st = new StringTokenizer(parameterString);
 
@@ -657,30 +459,8 @@ public class ASAPService {
             this.printUsage(SET_SEND_RECEIVED_MESSAGES, e.getLocalizedMessage());
         }
     }
+*/
 
-//    public void doPrintAllInformation() throws ASAPException {
-//        try {
-//            this.standardOut.println(this.peers.keySet().size() + " peers in folder: " + PEERS_ROOT_FOLDER);
-//            for(String peername : this.peers.keySet()) {
-//                this.standardOut.println("+++++++++++++++++++");
-//                this.standardOut.println("Peer: " + peername);
-//                ASAPPeer asapPeer = this.peers.get(peername);
-//
-//                for (CharSequence format : asapPeer.getFormats()) {
-//                    ASAPEngine asapStorage = asapPeer.getEngineByFormat(format);
-//                    System.out.println("storage: " + format);
-//                    for (CharSequence uri : asapStorage.getChannelURIs()) {
-//                        this.printChannelInfo(asapStorage, uri, format);
-//                    }
-//                }
-//                this.standardOut.println("+++++++++++++++++++\n");
-//            }
-//        }
-//        catch(RuntimeException | IOException | ASAPException e) {
-//            this.printUsage(PRINT_ALL_INFORMATION, e.getLocalizedMessage());
-//        }
-//    }
-//
 
     public Map<String, ASAPPeer>  doPrintAllInformation() throws ASAPException {
         try {
@@ -692,9 +472,6 @@ public class ASAPService {
                 for (CharSequence format : asapPeer.getFormats()) {
                     ASAPEngine asapStorage = asapPeer.getEngineByFormat(format);
                     System.out.println("storage: " + format);
-                    for (CharSequence uri : asapStorage.getChannelURIs()) {
-                        this.printChannelInfo(asapStorage, uri, format);
-                    }
                 }
                 this.standardOut.println("+++++++++++++++++++\n");
             }
