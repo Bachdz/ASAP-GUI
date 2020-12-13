@@ -2,6 +2,7 @@ package com.example.demo.api;
 
 import com.example.demo.model.Peer;
 import com.example.demo.model.Storage;
+import com.example.demo.model.StorageResponse;
 import com.example.demo.net.sharksystem.asap.ASAPException;
 import com.example.demo.net.sharksystem.asap.ASAPPeer;
 import com.example.demo.net.sharksystem.cmdline.ASAPService;
@@ -45,12 +46,20 @@ public class ServiceController {
     }
 
 
-/*    @PostMapping(path = "/app")
-    public void createApp (@Valid @NonNull @RequestParam("peer") String name, @RequestParam("app") String app) throws ASAPException {
-
+    @PostMapping(path = "/app")
+    public Storage createApp (@Valid @NonNull @RequestParam("peer") String name, @RequestParam("app") CharSequence app) throws ASAPException {
+        if (name.equals("") || app.equals("")) {
+            throw new IllegalArgumentException("{\"error\":\"Parameter is invalid\"}");
+        }
+        Storage storage= null;
+        try {
             asapService.doCreateASAPApp(name, app);
-
-    }*/
+            storage = new Storage(app);
+        } catch (ASAPException e) {
+            throw new Error(e);
+        }
+        return storage;
+    }
 
     @GetMapping(path = "/peers")
     public List<Peer> getPeers () {
@@ -74,14 +83,23 @@ public class ServiceController {
 
 
     @GetMapping(path = "/storages")
-    public List<Storage> getStorages (@Valid @NonNull @NotBlank @RequestParam(value = "peer", required = true) String peer) {
+    public StorageResponse getStorages (@Valid @NonNull @NotBlank @RequestParam(value = "peer", required = true) String peer) {
         List<CharSequence> storage= asapService.getStorages(peer);
         List<Storage> returnStorage = new ArrayList<Storage>() ;
+        List<String> returnMess = new ArrayList<>();
+
+        returnMess.add("sadsadas");
+
+
+
         for(CharSequence temp : storage) {
             Storage unit = new Storage(temp);
             returnStorage.add(unit);
         }
-        return returnStorage;
+
+        StorageResponse returnData = new StorageResponse(returnStorage,returnMess);
+
+        return returnData;
     }
 
 

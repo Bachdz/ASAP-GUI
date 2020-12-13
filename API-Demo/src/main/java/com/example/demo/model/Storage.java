@@ -4,6 +4,7 @@ public class Storage {
 
     private CharSequence name;
 
+
     public Storage(CharSequence name) {
         this.name = name;
     }

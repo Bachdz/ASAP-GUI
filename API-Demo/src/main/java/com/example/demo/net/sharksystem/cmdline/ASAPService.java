@@ -328,18 +328,13 @@ public class ASAPService {
         }
     }
 
-/*    public void doCreateASAPApp(String peer, String appName) throws ASAPException {
+    public void doCreateASAPApp(String peer, CharSequence appName) throws ASAPException {
         try{
             ASAPPeer asapPeer = this.peers.get(peer);
             if(asapPeer != null) {
-//                ASAPStorage storage = asapPeer.createEngineByFormat(appName);
+//              ASAPStorage storage = asapPeer.createEngineByFormat(appName);
                 asapPeer.createEngineByFormat(appName);
-                *//*
-                if(!storage.isASAPManagementStorageSet()) {
-                    storage.setASAPManagementStorage(ASAPEngineFS.getASAPStorage(peer,
-                            PEERS_ROOT_FOLDER + "/" + peer + "/ASAPManagement",
-                            ASAP_1_0.ASAP_MANAGEMENT_FORMAT));
-                }*//*
+
             }
         }
         catch(RuntimeException e) {
@@ -347,8 +342,7 @@ public class ASAPService {
         } catch (IOException | ASAPException e) {
             this.printUsage(CREATE_ASAP_APP, e.getLocalizedMessage());
         }
-    }*/
-
+    }
 /*    public void doCreateASAPChannel(String peerName, String app, String uriString, String[] recip) throws ASAPException {
 //        StringTokenizer st = new StringTokenizer(parameterString);
 
@@ -416,8 +410,6 @@ public class ASAPService {
             rootFolder.mkdirs();
             peers.clear();
         } catch (Error e) {
-
-           // System.out.println("Hier" + e);
             throw new Error();
         }
     }
