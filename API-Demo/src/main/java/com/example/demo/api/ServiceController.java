@@ -7,6 +7,9 @@ import com.example.demo.net.sharksystem.asap.ASAPException;
 import com.example.demo.net.sharksystem.asap.ASAPPeer;
 import com.example.demo.net.sharksystem.cmdline.ASAPService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.boot.context.event.ApplicationStartedEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.lang.NonNull;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,6 +18,7 @@ import javax.validation.constraints.NotBlank;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+
 @RequestMapping("api/v1/asap")
 @CrossOrigin
 @RestController
@@ -60,6 +64,13 @@ public class ServiceController {
         }
         return storage;
     }
+    @GetMapping(path = "/start")
+    @EventListener(ApplicationReadyEvent.class)
+    public void getStart () throws IOException, ASAPException {
+      asapService.doStart();
+    }
+
+
 
     @GetMapping(path = "/peers")
     public List<Peer> getPeers () {
@@ -71,6 +82,15 @@ public class ServiceController {
         }
         return peers;
     }
+
+    @GetMapping(path = "/logdata")
+    public List<String> getLogData () throws IOException {
+        List<String> logData= asapService.getConsoleLog();
+
+        return logData;
+    }
+
+
     @DeleteMapping (path = "/peers")
     public boolean  resetPeers () {
         try {
@@ -80,6 +100,8 @@ public class ServiceController {
             return false;
         }
     }
+
+
 
 
     @GetMapping(path = "/storages")
