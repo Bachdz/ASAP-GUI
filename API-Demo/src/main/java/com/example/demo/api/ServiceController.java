@@ -9,6 +9,7 @@ import com.example.demo.net.sharksystem.cmdline.ASAPService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.boot.context.event.ApplicationStartedEvent;
+import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.lang.NonNull;
 import org.springframework.web.bind.annotation.*;
@@ -65,7 +66,7 @@ public class ServiceController {
         return storage;
     }
     @GetMapping(path = "/start")
-    @EventListener(ApplicationReadyEvent.class)
+
     public void getStart () throws IOException, ASAPException {
       asapService.doStart();
     }
@@ -105,12 +106,9 @@ public class ServiceController {
 
 
     @GetMapping(path = "/storages")
-    public StorageResponse getStorages (@Valid @NonNull @NotBlank @RequestParam(value = "peer", required = true) String peer) {
+    public List<Storage> getStorages (@Valid @NonNull @NotBlank @RequestParam(value = "peer", required = true) String peer) {
         List<CharSequence> storage= asapService.getStorages(peer);
         List<Storage> returnStorage = new ArrayList<Storage>() ;
-        List<String> returnMess = new ArrayList<>();
-
-        returnMess.add("sadsadas");
 
 
 
@@ -119,9 +117,8 @@ public class ServiceController {
             returnStorage.add(unit);
         }
 
-        StorageResponse returnData = new StorageResponse(returnStorage,returnMess);
 
-        return returnData;
+        return returnStorage;
     }
 
 

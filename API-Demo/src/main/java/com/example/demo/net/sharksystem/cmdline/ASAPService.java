@@ -1,14 +1,9 @@
 package com.example.demo.net.sharksystem.cmdline;
 
 import com.example.demo.net.sharksystem.asap.*;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.boot.context.event.ApplicationStartedEvent;
-import org.springframework.context.ApplicationListener;
-import org.springframework.context.event.ContextRefreshedEvent;
-import org.springframework.context.event.EventListener;
+
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
 import java.io.*;
 import java.util.*;
 import java.io.PrintStream;
@@ -33,7 +28,7 @@ public class ASAPService{
     }
 
     public ASAPService () throws IOException, ASAPException {
-
+//        this.setOutStreams();
     }
 
 
@@ -51,9 +46,11 @@ public class ASAPService{
     ////////////////////////////////////////////////////////////////////////////////////////////////////////
     //                                         ASAP API usage                                             //
     ////////////////////////////////////////////////////////////////////////////////////////////////////////
+
     public void doStart() throws IOException, ASAPException {
         this.setOutStreams();
         this.doInitializeASAPStorages();
+
     }
 
     //get console log data
@@ -64,10 +61,9 @@ public class ASAPService{
     public List<String> getPeers() {
         List<String> peersName = new ArrayList<>();
         for(String peerName : this.peers.keySet()) {
-
             peersName.add(peerName);
         }
-        System.out.println(peersName);
+//        System.out.println(peersName);
         return peersName;
     }
 
