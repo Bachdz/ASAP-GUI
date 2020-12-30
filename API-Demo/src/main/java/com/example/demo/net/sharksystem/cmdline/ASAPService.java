@@ -1,5 +1,9 @@
 package com.example.demo.net.sharksystem.cmdline;
 
+import com.example.demo.model.Channel;
+import com.example.demo.model.Mess;
+import com.example.demo.model.Peer;
+import com.example.demo.net.sharksystem.Utils;
 import com.example.demo.net.sharksystem.asap.*;
 
 import org.springframework.stereotype.Service;
@@ -48,10 +52,48 @@ public class ASAPService{
     ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     public void doStart() throws IOException, ASAPException {
-        this.setOutStreams();
+//        this.setOutStreams();
         this.doInitializeASAPStorages();
 
     }
+
+    public void doCreateASAPMessages ( Mess message,String peername, String appName, String uri) throws IOException, ASAPException {
+        String messages = message.getMess();
+        System.out.println(messages);
+        ASAPStorage asapStorage = this.getEngine(peername, appName);
+        if(asapStorage == null) {
+            this.standardError.println("storage does not exist: " + peername + ":" + appName);
+            return;
+        }
+        asapStorage.add(uri, messages);
+    }
+
+
+    public Collection<Integer> doGetEras (String peername, String appname)  {
+
+        String dir = this.PEERS_ROOT_FOLDER + "/" + peername + "/" + appname;
+        Collection<Integer> erasInFolder = Utils.getErasInFolder(dir);
+        return erasInFolder;
+    }
+
+
+
+    public List<Channel> getChannels (String peername, String appname) throws IOException, ASAPException {
+        //TODO try catch error
+        List<Channel> returnChannels = new ArrayList<>();
+        ASAPStorage asapStorage = this.getEngine(peername, appname);
+        for(CharSequence uri : asapStorage.getChannelURIs()) {
+
+            ASAPChannel channel = asapStorage.getChannel(uri);
+            Set<CharSequence> recipients = channel.getRecipients();
+
+            Channel returnChannel = new Channel(uri,recipients);
+            returnChannels.add(returnChannel);
+        }
+        return returnChannels;
+    }
+
+
 
     //get console log data
     public List<String> getConsoleLog () throws IOException {
@@ -74,6 +116,14 @@ public class ASAPService{
             storages.add(format);
         }
         return storages;
+    }
+
+    public Iterator<CharSequence> getMessages (String peername, String appname, String uri) throws IOException, ASAPException {
+
+        ASAPStorage asapStorage = this.getEngine(peername, appname);
+        ASAPChannel channel = asapStorage.getChannel(uri);
+
+        return channel.getMessages().getMessagesAsCharSequence();
     }
 
     //createPeer
@@ -236,41 +286,25 @@ public class ASAPService{
 //            this.printUsage(CREATE_ASAP_APP, e.getLocalizedMessage());
         }
     }
-/*    public void doCreateASAPChannel(String peerName, String app, String uriString, String[] recip) throws ASAPException {
-//        StringTokenizer st = new StringTokenizer(parameterString);
-
+   public void doCreateASAPChannel(String peerName, String app, Channel channel) throws ASAPException {
         try {
-            String peername = peerName;
-            String appName = app;
-            String uri = uriString;
-
-            ASAPStorage storage = this.getEngine(peername, appName);
-
-            Set<CharSequence> recipients = new HashSet<>();
-
+            CharSequence uri = channel.getUri();
+            Set<CharSequence> recipients = channel.getRecipients();
             // one recipient is mandatory - provoke an exception otherwise
 
-            for (String pers : recip) {
-                        recipients.add(pers);
-            }
-//            recipients.add(recipient);
-
-            // optional recipients
-//            while(st.hasMoreTokens()) {
-//                recipients.add(st.nextToken());
-//            }
-
+            ASAPStorage storage = this.getEngine(peerName, app);
+            
             // finally add peername
-            recipients.add(peername);
+            recipients.add(peerName);
 
-            storage.createChannel(peername, uri, recipients);
+            storage.createChannel(peerName, uri, recipients);
         }
         catch(RuntimeException e) {
-            this.printUsage(CREATE_ASAP_CHANNEL, e.getLocalizedMessage());
+//            this.printUsage(CREATE_ASAP_CHANNEL, e.getLocalizedMessage());
         } catch (IOException | ASAPException e) {
-            this.printUsage(CREATE_ASAP_CHANNEL, e.getLocalizedMessage());
+//            this.printUsage(CREATE_ASAP_CHANNEL, e.getLocalizedMessage());
         }
-    }*/
+    }
 
 /*    public void doCreateASAPMessage(String parameterString) throws ASAPException {
         StringTokenizer st = new StringTokenizer(parameterString);

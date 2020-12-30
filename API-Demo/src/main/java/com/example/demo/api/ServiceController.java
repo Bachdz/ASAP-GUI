@@ -1,8 +1,6 @@
 package com.example.demo.api;
 
-import com.example.demo.model.Peer;
-import com.example.demo.model.Storage;
-import com.example.demo.model.StorageResponse;
+import com.example.demo.model.*;
 import com.example.demo.net.sharksystem.asap.ASAPException;
 import com.example.demo.net.sharksystem.asap.ASAPPeer;
 import com.example.demo.net.sharksystem.cmdline.ASAPService;
@@ -17,8 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 @RequestMapping("api/v1/asap")
 @CrossOrigin
@@ -36,7 +33,7 @@ public class ServiceController {
 
 
     @PostMapping(path = "/peer")
-    public Peer createPeer (@Valid @NonNull @NotBlank @RequestParam(value = "name", required = true) String name) throws ASAPException {
+    public Peer createPeer (@Valid @NonNull @NotBlank @RequestParam(value = "name") String name) throws ASAPException {
         if (name.equals("")) {
             throw new IllegalArgumentException("{\"error\":\"Parameter is invalid\"}");
         }
@@ -65,8 +62,35 @@ public class ServiceController {
         }
         return storage;
     }
-    @GetMapping(path = "/start")
 
+
+    @PostMapping(path = "/channel")
+    public Channel createChannel (@RequestBody Channel newChannel, @Valid @NonNull @RequestParam("peer") String peerName, @Valid @NonNull @RequestParam("app") String appName) throws ASAPException {
+           try {
+               asapService.doCreateASAPChannel(peerName,appName,newChannel);
+           } catch (ASAPException e) {
+               newChannel = null;
+               System.err.println("Something went wrong" + e);
+           }
+
+            return newChannel;
+    }
+
+    @PostMapping(path = "/addmessages")
+    public Mess createMessages (@RequestBody Mess newMess, @Valid @NonNull @RequestParam("peer") String peerName, @Valid @NonNull @RequestParam("app") String appName,@Valid @NonNull @RequestParam("uri") String uri) throws ASAPException {
+           try {
+                System.out.println(newMess.toString());
+               asapService.doCreateASAPMessages(newMess,peerName,appName,uri);
+           } catch (ASAPException | IOException e) {
+               newMess = null;
+               System.err.println("Something went wrong" + e);
+           }
+
+            return newMess;
+    }
+
+
+    @GetMapping(path = "/start")
     public void getStart () throws IOException, ASAPException {
       asapService.doStart();
     }
@@ -108,7 +132,7 @@ public class ServiceController {
     @GetMapping(path = "/storages")
     public List<Storage> getStorages (@Valid @NonNull @NotBlank @RequestParam(value = "peer", required = true) String peer) {
         List<CharSequence> storage= asapService.getStorages(peer);
-        List<Storage> returnStorage = new ArrayList<Storage>() ;
+        List<Storage> returnStorage = new ArrayList<>() ;
 
 
 
@@ -121,6 +145,23 @@ public class ServiceController {
         return returnStorage;
     }
 
+
+    @GetMapping(path = "/eras")
+    public Collection<Integer> getEras (@Valid @NonNull @NotBlank @RequestParam(value = "peer") String peer, @Valid @NonNull @NotBlank @RequestParam(value = "storage") String storage){
+        Collection<Integer> eras = asapService.doGetEras(peer,storage);
+        return eras ;
+    }
+
+
+    @GetMapping(path = "/channels")
+    public List<Channel> getChannels (@Valid @NonNull @NotBlank @RequestParam(value = "peer") String peer, @Valid @NonNull @NotBlank @RequestParam(value = "storage") String storage) throws IOException, ASAPException {
+        return asapService.getChannels(peer, storage);
+    }
+
+    @GetMapping(path = "/messages")
+    public Iterator<CharSequence> getMessages (@Valid @NonNull @NotBlank @RequestParam(value = "peer") String peer, @Valid @NonNull @NotBlank @RequestParam (value = "storage")String storage , @Valid @NonNull @NotBlank @RequestParam(value = "uri") String uri) throws IOException, ASAPException {
+        return asapService.getMessages(peer, storage,uri);
+    }
 
 }
 
