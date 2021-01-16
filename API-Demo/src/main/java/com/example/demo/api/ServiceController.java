@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 import java.io.IOException;
+import java.net.UnknownHostException;
 import java.util.*;
 
 @RequestMapping("api/v1/asap")
@@ -89,10 +90,62 @@ public class ServiceController {
             return newMess;
     }
 
+    @PostMapping(path = "/terminateconnection")
+    public boolean terminateConnection (@Valid @NonNull @RequestParam("host") String host, @Valid @NonNull @RequestParam("port") int port) {
+        try {
+            asapService.doKillConnectionAttempt(host,port);
+            return true;
+        } catch (ASAPException e) {
+            System.err.println("Something went wrong: " + e);
+            return false;
+        }
+    }
+
+
+    @PostMapping(path = "/terminate")
+    public boolean terminateServer (@Valid @NonNull @RequestParam("port") String port) {
+        try {
+            asapService.doKillServer(port);
+            return true;
+        } catch (Exception e) {
+            System.err.println("Something went wrong" + e);
+            return false;
+        }
+    }
+
+
+
+
+    @PostMapping(path = "/openconnection")
+    public ConnectionResponse openConnection (@Valid @NonNull @RequestParam("port") int port, @Valid @NonNull @RequestParam("peer") String peerName) {
+           try {
+               return  asapService.doOpen(port,peerName);
+           } catch (ASAPException | UnknownHostException e) {
+               System.err.println("Something went wrong" + e);
+               return null;
+           }
+
+    }
+
+    @PostMapping(path = "/connect")
+    public ConnectionResponse doConnect (@Valid @NonNull @RequestParam("host") String host, @Valid @NonNull @RequestParam("port") int port,@Valid @NonNull @RequestParam("peer") String peerName) {
+           try {
+               return  asapService.doConnect(host,port,peerName);
+           } catch (ASAPException e) {
+               System.err.println("Something went wrong" + e);
+               return null;
+           }
+    }
+
 
     @GetMapping(path = "/start")
-    public void getStart () throws IOException, ASAPException {
-      asapService.doStart();
+    public boolean getStart (){
+        try {
+            asapService.doStart();
+            return true;
+        } catch (IOException |ASAPException e) {
+            return false;
+        }
     }
 
 
@@ -116,6 +169,13 @@ public class ServiceController {
     }
 
 
+
+    @GetMapping(path = "/test")
+    public void getLogData (@Valid @NonNull @NotBlank @RequestParam(value = "peer") String peer, @Valid @NonNull @NotBlank @RequestParam(value = "storage")String storage,@Valid @NonNull @NotBlank @RequestParam(value = "uri")String uri) throws IOException, ASAPException {
+     asapService.getReceivedMessages(peer, storage,uri);
+
+    }
+
     @DeleteMapping (path = "/peers")
     public boolean  resetPeers () {
         try {
@@ -126,6 +186,47 @@ public class ServiceController {
         }
     }
 
+    @GetMapping(path = "/activatemess")
+    public boolean doActivateOnlineMess (@Valid @NonNull @NotBlank @RequestParam(value = "peer", required = true) String peer) {
+       try {
+           asapService.doActivateOnlineMessages(peer);
+           return true;
+       } catch (Exception e) {
+           System.err.println(e);
+           return false;
+       }
+       }
+    @GetMapping(path = "/deactivatemess")
+    public boolean doDeactivateOnlineMess (@Valid @NonNull @NotBlank @RequestParam(value = "peer", required = true) String peer) {
+        try {
+            asapService.doDectivateOnlineMessages(peer);
+            return true;
+        } catch (Exception e) {
+            System.err.println(e);
+            return false;
+        }
+    }
+
+
+    @GetMapping(path = "/setsendreceived")
+    public boolean dosetSendReceived (@Valid @NonNull @NotBlank @RequestParam(value = "peer") String peer, @Valid @NonNull @NotBlank @RequestParam(value = "storage") String storage,@Valid @NonNull @NotBlank @RequestParam(value = "value") boolean value) {
+        try {
+            asapService.doSetSendReceivedMessage(peer,storage,value);
+            return true;
+        } catch (ASAPException e) {
+            System.err.println(e);
+            return false;
+        }
+    }
+    @GetMapping(path = "/getsendreceived")
+    public boolean doGetSendReceived (@Valid @NonNull @NotBlank @RequestParam(value = "peer") String peer, @Valid @NonNull @NotBlank @RequestParam(value = "storage") String storage) {
+        try {
+           return asapService.doGetSendReceivedMessage(peer,storage);
+        } catch (ASAPException | IOException e) {
+            System.err.println(e);
+            return false;
+        }
+    }
 
 
 

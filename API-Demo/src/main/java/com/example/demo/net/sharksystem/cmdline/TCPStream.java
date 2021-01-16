@@ -11,6 +11,10 @@ import java.net.Socket;
  * @author thsc
  */
 public class TCPStream extends Thread {
+
+   // TODO @Autowired ASAPService asapService;
+    private boolean isInitialized = true;
+    private final String host;
     private final int port;
     private final boolean asServer;
     private final String name;
@@ -25,13 +29,25 @@ public class TCPStream extends Thread {
     private TCPClient tcpClient = null;
     private long waitInMillis = WAIT_LOOP_IN_MILLIS;
 
-    public TCPStream(int port, boolean asServer, String name, TCPStreamCreatedListener listener) {
+    public TCPStream(String remoteHost,int port, boolean asServer, String name, TCPStreamCreatedListener listener) {
+        this.host = remoteHost;
         this.port = port;
         this.asServer = asServer;
         this.name = name;
         this.listener = listener;
     }
 
+    public TCPStream(int port, boolean asServer, String name, TCPStreamCreatedListener listener) {
+        this.host=null;
+        this.port = port;
+        this.asServer = asServer;
+        this.name = name;
+        this.listener = listener;
+    }
+
+    public TCPStream(String host,int port, boolean asServer, String name) {
+        this(host,port, asServer, name, null);
+    }
     public TCPStream(int port, boolean asServer, String name) {
         this(port, asServer, name, null);
     }
@@ -43,6 +59,11 @@ public class TCPStream extends Thread {
     public void setWaitPeriod(long waitInMillis) {
         this.waitInMillis = waitInMillis;
     }
+
+    public synchronized boolean getFatalError () {
+        return this.fatalError;
+    }
+    public void setFatalError(boolean status) {this.fatalError = status;}
 
     public void kill() {
         try {
@@ -65,12 +86,15 @@ public class TCPStream extends Thread {
     @Override
     public void run() {
         this.createThread = Thread.currentThread();
+//        System.out.println(port);
+
+
         try {
             if(this.asServer) {
                 System.out.println(
                         "TCPChannel: note: this implementation will only accept *one* connection attempt as server");
                 this.tcpServer = new TCPServer();
-                this.socket = tcpServer.getSocket();
+                this.socket = tcpServer.getSocket(this);
             } else {
                 this.tcpClient = new TCPClient();
                 this.socket = this.tcpClient.getSocket();
@@ -80,11 +104,18 @@ public class TCPStream extends Thread {
             if(this.listener != null) {
                 this.listener.streamCreated(this);
             }
+
         } catch (IOException ex) {
-            //<<<<<<<<<<<<<<<<<<debug
             String s = "couldn't establish connection";
             System.out.println(s);
             this.fatalError = true;
+            //<<<<<<<<<<<<<<<<<<debug
+
+        } finally {
+            synchronized (this) {
+                this.isInitialized = false;
+                this.notifyAll();
+            }
         }
     }
     
@@ -157,14 +188,19 @@ public class TCPStream extends Thread {
         this.checkConnected();
         return this.socket.getOutputStream();
     }
-    
+
+    public synchronized boolean isInitialized() {
+        return isInitialized;
+    }
+
     private class TCPServer {
         private ServerSocket srvSocket = null;
 
-        Socket getSocket() throws IOException {
+        Socket getSocket(TCPStream stream) throws IOException {
             if(this.srvSocket == null) {
                 this.srvSocket = new ServerSocket(port);
             }
+
 
             //<<<<<<<<<<<<<<<<<<debug
             StringBuilder b = new StringBuilder();
@@ -177,7 +213,14 @@ public class TCPStream extends Thread {
             System.out.println(b.toString());
             //>>>>>>>>>>>>>>>>>>>debug
 
+            synchronized (stream){
+                isInitialized = false;
+                stream.notifyAll();
+            }
+
+
             Socket socket = this.srvSocket.accept();
+
             //<<<<<<<<<<<<<<<<<<debug
             b = new StringBuilder();
             b.append("TCPChannel (");
@@ -186,7 +229,6 @@ public class TCPStream extends Thread {
             b.append("connected");
             System.out.println(b.toString());
             //>>>>>>>>>>>>>>>>>>>debug
-            
             return socket;
         }
 
@@ -210,11 +252,13 @@ public class TCPStream extends Thread {
                     b.append("TCPChannel (");
                     b.append(name);
                     b.append("): ");
-                    b.append("try to connect localhost port ");
+                    b.append("try to connect to host ");
+                    b.append(host);
+                    b.append("| port  ");
                     b.append(port);
                     System.out.println(b.toString());
                     //>>>>>>>>>>>>>>>>>>>debug
-                    Socket socket = new Socket("localhost", port);
+                    Socket socket = new Socket(host, port);
                     return socket;
                 }
                 catch(IOException ioe) {

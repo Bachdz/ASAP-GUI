@@ -637,6 +637,11 @@ public abstract class ASAPEngine extends ASAPStorageImpl implements ASAPStorage,
         this.saveStatus();
     }
 
+
+    public boolean getBehaviourSendReceivedChunks() throws IOException {
+        return this.sendReceivedChunks;
+    }
+
     private void sendChunks(CharSequence sender, String remotePeer, ASAPChunkStorage chunkStorage,
                             ASAP_1_0 protocol, int workingEra,
                             int lastEra, OutputStream os) throws IOException, ASAPException {

@@ -1,28 +1,29 @@
 package com.example.demo.net.sharksystem.cmdline;
 
 import com.example.demo.model.Channel;
+import com.example.demo.model.ConnectionResponse;
 import com.example.demo.model.Mess;
-import com.example.demo.model.Peer;
 import com.example.demo.net.sharksystem.Utils;
 import com.example.demo.net.sharksystem.asap.*;
 
 import org.springframework.stereotype.Service;
 
 import java.io.*;
+import java.net.UnknownHostException;
 import java.util.*;
 import java.io.PrintStream;
+import java.net.InetAddress;
 
 
 @Service
-public class ASAPService{
-
+public class ASAPService {
 
 
     private PrintStream standardOut = System.out;
     private PrintStream standardError = System.err;
     private OutputCollector outputCollector = new OutputCollector();
 
-    private BufferedReader userInput;
+    private TCPStream connectionAttempt = null ;
 
     public static final String PEERS_ROOT_FOLDER = "src/asapPeers";
     private Map<String, ASAPPeer> peers = new HashMap();
@@ -31,17 +32,16 @@ public class ASAPService{
         System.setOut(new PrintStream(outputCollector));
     }
 
-    public ASAPService () throws IOException, ASAPException {
+    public ASAPService() throws IOException, ASAPException {
 //        this.setOutStreams();
     }
-
 
 
     private List<String> cmds = new ArrayList<>();
 
 
     private Map<String, TCPStream> streams = new HashMap<>();
-    private long waitPeriod = 1000*30; // 30 seconds
+    private long waitPeriod = 1000 * 5; // 5 seconds
 
     private void setWaitPeriod(long period) {
         this.waitPeriod = period;
@@ -57,11 +57,115 @@ public class ASAPService{
 
     }
 
-    public void doCreateASAPMessages ( Mess message,String peername, String appName, String uri) throws IOException, ASAPException {
+    //TODO exception
+    public ConnectionResponse doOpen(int port, String engineName) throws ASAPException, UnknownHostException {
+        String name = "server:" + port;
+
+
+        TCPStream stream = new TCPStream(port, true, name);
+        try {
+            if (this.startTCPStream(name, stream, engineName)) {
+
+                String thisAddress = InetAddress.getLocalHost().toString();
+                ConnectionResponse connectionResponse = new ConnectionResponse(engineName,thisAddress,port,true);
+                return connectionResponse;
+            } else {
+                return null;
+            }
+        } catch (ASAPException e) {
+            System.err.println(e);
+            return null;
+        }
+    }
+
+    public ConnectionResponse doConnect(String remoteHost, int remotePort, String engineName) throws ASAPException {
+        try {
+            String name = remoteHost + ":" + remotePort;
+            TCPStream stream = new TCPStream(remoteHost, remotePort, false, name);
+            this.streams.put(name, stream);
+            if (this.startTCPStream(name, stream, engineName)) {
+                ConnectionResponse connectionResponse = new ConnectionResponse(engineName,remoteHost,remotePort,true);
+                return connectionResponse;
+            } else {
+                return null;
+            }
+
+
+        } catch (ASAPException e) {
+            System.err.println(e);
+            return null;
+        }
+    }
+
+    public void doKillConnectionAttempt (String host, int port) throws ASAPException{
+        try {
+            String channelName = host+":" +port;
+            TCPStream channel = this.streams.remove(channelName);
+            if (channel == null) {
+                this.standardError.println("channel does not exist: " + channelName);
+                return;
+            }
+            this.standardOut.println("kill connection to: "+ channelName);
+            channel.kill();
+
+            this.standardOut.println(".. done");
+        } catch (Exception e) {
+            System.err.println(e);
+        }
+    }
+
+
+    //TODO: EXCEPTION
+    public void doKillServer(String port) {
+        try {
+            String channelName = "server:" + port;
+            TCPStream channel = this.streams.remove(channelName);
+            if (channel == null) {
+                this.standardError.println("channel does not exist: " + channelName);
+                return;
+            }
+            this.standardOut.println("kill "+ channelName);
+            channel.kill();
+
+            this.standardOut.println(".. done");
+        } catch (Exception e) {
+            System.err.println(e);
+        }
+
+    }
+
+    private boolean startTCPStream(String name, TCPStream stream, String peerName) throws ASAPException {
+        stream.setWaitPeriod(this.waitPeriod);
+        ASAPPeer asapPeer = this.getASAPPeer(peerName);
+        stream.setListener(new TCPStreamCreatedHandler(asapPeer));
+
+        stream.start();
+
+        // Check if socket is initialized
+        synchronized (stream) {
+            while (stream.isInitialized()) {
+                try {
+                    stream.wait();
+                } catch (InterruptedException e) {
+                    System.err.println(e);
+                }
+            }
+        }
+
+        //check if smt went wrong
+        if (!stream.getFatalError()) {
+            this.streams.put(name, stream);
+            return true;
+        }
+        return false;
+
+    }
+
+    public void doCreateASAPMessages(Mess message, String peername, String appName, String uri) throws IOException, ASAPException {
         String messages = message.getMess();
         System.out.println(messages);
         ASAPStorage asapStorage = this.getEngine(peername, appName);
-        if(asapStorage == null) {
+        if (asapStorage == null) {
             this.standardError.println("storage does not exist: " + peername + ":" + appName);
             return;
         }
@@ -69,40 +173,37 @@ public class ASAPService{
     }
 
 
-    public Collection<Integer> doGetEras (String peername, String appname)  {
-
+    public Collection<Integer> doGetEras(String peername, String appname) {
         String dir = this.PEERS_ROOT_FOLDER + "/" + peername + "/" + appname;
         Collection<Integer> erasInFolder = Utils.getErasInFolder(dir);
         return erasInFolder;
     }
 
 
-
-    public List<Channel> getChannels (String peername, String appname) throws IOException, ASAPException {
+    public List<Channel> getChannels(String peername, String appname) throws IOException, ASAPException {
         //TODO try catch error
         List<Channel> returnChannels = new ArrayList<>();
         ASAPStorage asapStorage = this.getEngine(peername, appname);
-        for(CharSequence uri : asapStorage.getChannelURIs()) {
+        for (CharSequence uri : asapStorage.getChannelURIs()) {
 
             ASAPChannel channel = asapStorage.getChannel(uri);
             Set<CharSequence> recipients = channel.getRecipients();
 
-            Channel returnChannel = new Channel(uri,recipients);
+            Channel returnChannel = new Channel(uri, recipients);
             returnChannels.add(returnChannel);
         }
         return returnChannels;
     }
 
 
-
     //get console log data
-    public List<String> getConsoleLog () throws IOException {
+    public List<String> getConsoleLog() throws IOException {
         return this.outputCollector.getLines();
     }
 
     public List<String> getPeers() {
         List<String> peersName = new ArrayList<>();
-        for(String peerName : this.peers.keySet()) {
+        for (String peerName : this.peers.keySet()) {
             peersName.add(peerName);
         }
 //        System.out.println(peersName);
@@ -118,7 +219,26 @@ public class ASAPService{
         return storages;
     }
 
-    public Iterator<CharSequence> getMessages (String peername, String appname, String uri) throws IOException, ASAPException {
+    //TODO
+    public void getReceivedMessages(String peername, String appname, String uri) throws IOException, ASAPException {
+        ASAPStorage asapStorage = this.getEngine(peername, appname);
+        List<CharSequence> senderList = asapStorage.getSender();
+        System.out.println(senderList.toString());
+        for (CharSequence sender : senderList) {
+            System.out.println("Sender: " + sender.toString());
+            ASAPChunkStorage receivedStorage = asapStorage.getReceivedChunksStorage(sender);
+            Iterator<CharSequence> mess = receivedStorage.getASAPMessages(uri).getMessagesAsCharSequence();
+            while (mess.hasNext()) {
+                System.out.println("Messages:" + mess.next().toString());
+            }
+
+
+        }
+
+
+    }
+
+    public Iterator<CharSequence> getMessages(String peername, String appname, String uri) throws IOException, ASAPException {
 
         ASAPStorage asapStorage = this.getEngine(peername, appname);
         ASAPChannel channel = asapStorage.getChannel(uri);
@@ -141,7 +261,7 @@ public class ASAPService{
 
     private ASAPEngine getEngine(String peername, String appName) throws ASAPException, IOException {
         ASAPPeer asapPeer = this.peers.get(peername);
-        if(asapPeer == null) {
+        if (asapPeer == null) {
             throw new ASAPException("peer does not exist: " + peername);
         }
 
@@ -150,26 +270,60 @@ public class ASAPService{
 
     public ASAPPeer getASAPPeer(String peerName) throws ASAPException {
         ASAPPeer asapPeer = this.peers.get(peerName);
-        if(asapPeer == null) {
+        if (asapPeer == null) {
             throw new ASAPException("engine does not exist: " + peerName);
         }
 
         return asapPeer;
     }
 
+
+    //TODO: Exception ?
+    public void doActivateOnlineMessages(String peerName) {
+        try {
+            ASAPPeer asapPeer = this.peers.get(peerName);
+            if (asapPeer != null) {
+                asapPeer.activateOnlineMessages();
+            }
+
+        } catch (RuntimeException e) {
+//            this.printUsage(CREATE_ASAP_APP, e.getLocalizedMessage());
+        }
+    }
+
+    //TODO: Exception ?
+    public void doDectivateOnlineMessages(String peerName) {
+        try {
+            ASAPPeer asapPeer = this.peers.get(peerName);
+            if (asapPeer != null) {
+                asapPeer.deactivateOnlineMessages();
+            }
+
+        } catch (RuntimeException e) {
+//            this.printUsage(CREATE_ASAP_APP, e.getLocalizedMessage());
+        }
+    }
+
+    //TODO: exception ?
+    public void doSetSendReceivedMessage(String peerName, String appName, boolean value) throws ASAPException {
+        try {
+            ASAPEngine engine = this.getEngine(peerName, appName);
+            engine.setBehaviourSendReceivedChunks(value);
+        } catch (RuntimeException | IOException | ASAPException e) {
+//            this.printUsage(SET_SEND_RECEIVED_MESSAGES, e.getLocalizedMessage());
+        }
+    }
+
+    //TODO: exception ?
+    public boolean doGetSendReceivedMessage(String peerName, String appName) throws ASAPException, IOException {
+        ASAPEngine engine = this.getEngine(peerName, appName);
+        return engine.getBehaviourSendReceivedChunks();
+    }
+
+
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //                               attach layer 2 (ad-hoc) protocol to ASAP                                 //
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    private void startTCPStream(String name, TCPStream stream, String peerName) throws ASAPException {
-        stream.setWaitPeriod(this.waitPeriod);
-        ASAPPeer asapPeer = this.getASAPPeer(peerName);
-
-        stream.setListener(new TCPStreamCreatedHandler(asapPeer));
-        stream.start();
-        this.streams.put(name, stream);
-    }
-
 
 
     private class TCPStreamCreatedHandler implements TCPStreamCreatedListener {
@@ -200,57 +354,9 @@ public class ASAPService{
 
 
 
-
-    public void doConnect(String parameterString) throws ASAPException {
-        StringTokenizer st = new StringTokenizer(parameterString);
-
-        try {
-            String remoteHost = st.nextToken();
-            String remotePortString = st.nextToken();
-            String engineName = null;
-            if(!st.hasMoreTokens()) {
-                // no remote host set - shift
-                engineName = remotePortString;
-                remotePortString = remoteHost;
-                remoteHost = "localhost";
-            } else {
-                engineName = st.nextToken();
-            }
-            int remotePort = Integer.parseInt(remotePortString);
-
-            String name =  remoteHost + ":" + remotePortString;
-
-            this.startTCPStream(name,  new TCPStream(remotePort, false, name), engineName);
-        }
-        catch(RuntimeException re) {
-//            this.printUsage(CONNECT, re.getLocalizedMessage());
-        } catch (ASAPException e) {
-//            this.printUsage(CONNECT, e.getLocalizedMessage());
-        }
-    }
-
-    public void doOpen(String parameterString) throws ASAPException {
-        StringTokenizer st = new StringTokenizer(parameterString);
-
-        try {
-            String portString = st.nextToken();
-            String engineName = st.nextToken();
-
-            int port = Integer.parseInt(portString);
-            String name =  "server:" + port;
-
-            this.startTCPStream(name,  new TCPStream(port, true, name), engineName);
-        }
-        catch(RuntimeException re) {
-//            this.printUsage(OPEN, re.getLocalizedMessage());
-        } catch (ASAPException e) {
-//            this.printUsage(OPEN, e.getLocalizedMessage());
-        }
-    }
-
     public void doList() throws ASAPException {
         this.standardOut.println("connections:");
-        for(String connectionName : this.streams.keySet()) {
+        for (String connectionName : this.streams.keySet()) {
             this.standardOut.println(connectionName);
         }
 
@@ -258,13 +364,11 @@ public class ASAPService{
     }
 
 
-
     public void doCreateASAPPeer(String peerName) throws ASAPException {
 
         try {
             this.createPeer(peerName);
-        }
-        catch(RuntimeException e) {
+        } catch (RuntimeException e) {
 //            this.printUsage(CREATE_ASAP_PEER, e.getLocalizedMessage());
         } catch (IOException | ASAPException e) {
 //            this.printUsage(CREATE_ASAP_PEER, e.getLocalizedMessage());
@@ -272,65 +376,41 @@ public class ASAPService{
     }
 
     public void doCreateASAPApp(String peer, CharSequence appName) throws ASAPException {
-        try{
+        try {
             ASAPPeer asapPeer = this.peers.get(peer);
-            if(asapPeer != null) {
+            if (asapPeer != null) {
 //              ASAPStorage storage = asapPeer.createEngineByFormat(appName);
                 asapPeer.createEngineByFormat(appName);
 
             }
-        }
-        catch(RuntimeException e) {
+        } catch (RuntimeException e) {
 //            this.printUsage(CREATE_ASAP_APP, e.getLocalizedMessage());
         } catch (IOException | ASAPException e) {
 //            this.printUsage(CREATE_ASAP_APP, e.getLocalizedMessage());
         }
     }
-   public void doCreateASAPChannel(String peerName, String app, Channel channel) throws ASAPException {
+
+    public void doCreateASAPChannel(String peerName, String app, Channel channel) throws ASAPException {
         try {
             CharSequence uri = channel.getUri();
             Set<CharSequence> recipients = channel.getRecipients();
             // one recipient is mandatory - provoke an exception otherwise
 
             ASAPStorage storage = this.getEngine(peerName, app);
-            
+
             // finally add peername
             recipients.add(peerName);
 
             storage.createChannel(peerName, uri, recipients);
-        }
-        catch(RuntimeException e) {
+        } catch (RuntimeException e) {
 //            this.printUsage(CREATE_ASAP_CHANNEL, e.getLocalizedMessage());
         } catch (IOException | ASAPException e) {
 //            this.printUsage(CREATE_ASAP_CHANNEL, e.getLocalizedMessage());
         }
     }
 
-/*    public void doCreateASAPMessage(String parameterString) throws ASAPException {
-        StringTokenizer st = new StringTokenizer(parameterString);
 
-        try {
-            String peername = st.nextToken();
-            String appName = st.nextToken();
-            String uri = st.nextToken();
-            String message = st.nextToken();
-
-            // first - get storage
-            ASAPStorage asapStorage = this.getEngine(peername, appName);
-            if(asapStorage == null) {
-                this.standardError.println("storage does not exist: " + peername + ":" + appName);
-                return;
-            }
-            asapStorage.add(uri, message);
-        }
-        catch(RuntimeException e) {
-            this.printUsage(CREATE_ASAP_MESSAGE, e.getLocalizedMessage());
-        } catch (IOException | ASAPException e) {
-            this.printUsage(CREATE_ASAP_MESSAGE, e.getLocalizedMessage());
-        }
-    }*/
-
-    public void doResetASAPStorages() throws Error{
+    public void doResetASAPStorages() throws Error {
         try {
             ASAPEngineFS.removeFolder(PEERS_ROOT_FOLDER);
             File rootFolder = new File(PEERS_ROOT_FOLDER);
@@ -341,50 +421,26 @@ public class ASAPService{
         }
     }
 
-    public void doInitializeASAPStorages () throws IOException, ASAPException{
+    public void doInitializeASAPStorages() throws IOException, ASAPException {
         // set up peers
         File rootFolder = new File(PEERS_ROOT_FOLDER);
-        if(rootFolder.exists()) {
+        if (rootFolder.exists()) {
             // each root folder is a peer - per definition in this very application
             String[] peerNames = rootFolder.list();
 
             // set up peers
-            for(String peerName : peerNames) {
+            for (String peerName : peerNames) {
                 this.createPeer(peerName);
             }
         }
     }
 
- /*   public void doResetASAPStorages() {
-        ASAPEngineFS.removeFolder(PEERS_ROOT_FOLDER);
-        File rootFolder = new File(PEERS_ROOT_FOLDER);
-        rootFolder.mkdirs();
-    }*/
-
-/*
-    public void doSetSendReceivedMessage(String parameterString) throws ASAPException {
-        StringTokenizer st = new StringTokenizer(parameterString);
-
-        try {
-            String storageName = st.nextToken();
-            String onOff = st.nextToken();
-
-            boolean on = this.parseOnOffValue(onOff);
-
-            ASAPEngine engine = this.getEngine(storageName);
-            engine.setBehaviourSendReceivedChunks(on);
-        }
-        catch(RuntimeException | IOException | ASAPException e) {
-            this.printUsage(SET_SEND_RECEIVED_MESSAGES, e.getLocalizedMessage());
-        }
-    }
-*/
 
 
-    public Map<String, ASAPPeer>  doPrintAllInformation() throws ASAPException {
+    public Map<String, ASAPPeer> doPrintAllInformation() throws ASAPException {
         try {
             this.standardOut.println(this.peers.keySet().size() + " peers in folder: " + PEERS_ROOT_FOLDER);
-            for(String peername : this.peers.keySet()) {
+            for (String peername : this.peers.keySet()) {
                 this.standardOut.println("+++++++++++++++++++");
                 this.standardOut.println("Peer: " + peername);
                 ASAPPeer asapPeer = this.peers.get(peername);
@@ -394,8 +450,7 @@ public class ASAPService{
                 }
                 this.standardOut.println("+++++++++++++++++++\n");
             }
-        }
-        catch(RuntimeException | IOException | ASAPException e) {
+        } catch (RuntimeException | IOException | ASAPException e) {
 //            this.printUsage(PRINT_ALL_INFORMATION, e.getLocalizedMessage());
         }
         return this.peers;
@@ -410,7 +465,7 @@ public class ASAPService{
 
             // first - get storage
             ASAPStorage asapStorage = this.getEngine(peername, appName);
-            if(asapStorage == null) {
+            if (asapStorage == null) {
                 System.err.println("storage does not exist: " + peername + ":" + appName);
                 return;
             }
@@ -419,44 +474,14 @@ public class ASAPService{
             this.standardOut.println(asapStorage.getChannelURIs().size() +
                     " channels in storage " + appName +
                     " (note: channels without messages are considered non-existent)");
-            for(CharSequence uri : asapStorage.getChannelURIs()) {
+            for (CharSequence uri : asapStorage.getChannelURIs()) {
                 this.doPrintChannelInformation(parameterString + " " + uri);
             }
-        }
-        catch(RuntimeException | IOException | ASAPException e) {
+        } catch (RuntimeException | IOException | ASAPException e) {
 //            this.printUsage(PRINT_STORAGE_INFORMATION, e.getLocalizedMessage());
         }
     }
 
-    public void doSleep(String parameterString) throws ASAPException {
-        StringTokenizer st = new StringTokenizer(parameterString);
-
-        try {
-            Thread.sleep(Long.parseLong(parameterString));
-        }
-        catch(InterruptedException e) {
-            this.standardOut.println("sleep interrupted");
-        }
-        catch(RuntimeException e) {
-//            this.printUsage(PRINT_STORAGE_INFORMATION, e.getLocalizedMessage());
-        }
-    }
-
-    private void doShowLog() {
-        if(this.cmds.size() < 1) return;
-
-        boolean first = true;
-        for(String c : this.cmds) {
-            if (!first) {
-                this.standardOut.println("\\n\" + ");
-            } else {
-                first = false;
-            }
-            this.standardOut.print("\"");
-            this.standardOut.print(c);
-        }
-        this.standardOut.println("\"");
-    }
 
     public void doPrintChannelInformation(String parameterString) throws ASAPException {
         //                     out.println("example: " + PRINT_CHANNEL_INFORMATION + " Alice chat sn2://abChat");
@@ -469,15 +494,14 @@ public class ASAPService{
 
             // first - get storage
             ASAPStorage asapStorage = this.getEngine(peername, appName);
-            if(asapStorage == null) {
+            if (asapStorage == null) {
                 this.standardError.println("storage does not exist: " + peername + ":" + appName);
                 return;
             }
 
             this.printChannelInfo(asapStorage, uri, appName);
 
-        }
-        catch(RuntimeException | ASAPException | IOException e) {
+        } catch (RuntimeException | ASAPException | IOException e) {
 //            this.printUsage(CREATE_ASAP_MESSAGE, e.getLocalizedMessage());
         }
     }
@@ -492,7 +516,7 @@ public class ASAPService{
         this.standardOut.println("#Messages == " + channel.getMessages().size());
         this.standardOut.println("#Recipients == " + recipients.size() +
                 " (0 means: open channel - no restrictions - anybody receives from this channel)");
-        for(CharSequence recipient : recipients) {
+        for (CharSequence recipient : recipients) {
             this.standardOut.println(recipient);
         }
     }
@@ -503,7 +527,7 @@ public class ASAPService{
 
     private String getUriFromStorageName(String storageName) throws ASAPException {
         int i = storageName.indexOf(":");
-        if(i < 0) throw new ASAPException("malformed storage name (missing \":\") " + storageName);
+        if (i < 0) throw new ASAPException("malformed storage name (missing \":\") " + storageName);
 
         return storageName.substring(i);
     }
@@ -513,14 +537,14 @@ public class ASAPService{
         String[] split = storageName.split(":");
 
         ASAPEngine asapEngine = this.getEngine(split[0], split[1]);
-        if(asapEngine == null) throw new ASAPException("no storage with name: " + storageName);
+        if (asapEngine == null) throw new ASAPException("no storage with name: " + storageName);
 
         return asapEngine;
     }
 
     private boolean parseOnOffValue(String onOff) throws ASAPException {
-        if(onOff.equalsIgnoreCase("on")) return true;
-        if(onOff.equalsIgnoreCase("off")) return false;
+        if (onOff.equalsIgnoreCase("on")) return true;
+        if (onOff.equalsIgnoreCase("off")) return false;
 
         throw new ASAPException("unexpected value; expected on or off, found: " + onOff);
 
