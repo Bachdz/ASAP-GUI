@@ -10,6 +10,8 @@ import org.springframework.boot.context.event.ApplicationStartedEvent;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.lang.NonNull;
+import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -80,7 +82,7 @@ public class ServiceController {
     @PostMapping(path = "/addmessages")
     public Mess createMessages (@RequestBody Mess newMess, @Valid @NonNull @RequestParam("peer") String peerName, @Valid @NonNull @RequestParam("app") String appName,@Valid @NonNull @RequestParam("uri") String uri) throws ASAPException {
            try {
-                System.out.println(newMess.toString());
+//                System.out.println(newMess.toString());
                asapService.doCreateASAPMessages(newMess,peerName,appName,uri);
            } catch (ASAPException | IOException e) {
                newMess = null;

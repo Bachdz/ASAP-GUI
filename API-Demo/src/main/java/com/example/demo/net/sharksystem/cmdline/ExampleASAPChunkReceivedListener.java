@@ -40,7 +40,6 @@ public class ExampleASAPChunkReceivedListener implements ASAPChunkReceivedListen
             this.uri = uri;
             this.era = era;
         }
-
         public String getFormat() { return this.format; }
         public String getSender() { return this.sender; }
         public String getUri() { return this.uri; }

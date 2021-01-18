@@ -163,7 +163,7 @@ public class ASAPService {
 
     public void doCreateASAPMessages(Mess message, String peername, String appName, String uri) throws IOException, ASAPException {
         String messages = message.getMess();
-        System.out.println(messages);
+//        System.out.println(messages);
         ASAPStorage asapStorage = this.getEngine(peername, appName);
         if (asapStorage == null) {
             this.standardError.println("storage does not exist: " + peername + ":" + appName);
