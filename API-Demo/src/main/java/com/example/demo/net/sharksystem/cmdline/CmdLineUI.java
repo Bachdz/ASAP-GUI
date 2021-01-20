@@ -1,6 +1,8 @@
 package com.example.demo.net.sharksystem.cmdline;
 
 import com.example.demo.net.sharksystem.asap.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 //import org.springframework.stereotype.Service;
 
 import java.io.*;
@@ -30,6 +32,11 @@ public class CmdLineUI {
     public static final String PRINT_ALL_INFORMATION = "printAll";
     public static final String SLEEP = "sleep";
     public static final String SHOW_LOG = "showlog";
+
+    @Autowired
+    private SimpMessagingTemplate template;
+
+
 
     private PrintStream standardOut = System.out;
     private PrintStream standardError = System.err;
@@ -342,7 +349,7 @@ public class CmdLineUI {
 
     private void createPeer(String name) throws IOException, ASAPException {
         ExampleASAPChunkReceivedListener asapChunkReceivedListener =
-                new ExampleASAPChunkReceivedListener(PEERS_ROOT_FOLDER + "/" + name);
+                new ExampleASAPChunkReceivedListener(PEERS_ROOT_FOLDER + "/" + name, template);
 
         ASAPPeer asapPeer = ASAPPeerFS.createASAPPeer(name, // peer name
                 PEERS_ROOT_FOLDER + "/" + name, // peer folder

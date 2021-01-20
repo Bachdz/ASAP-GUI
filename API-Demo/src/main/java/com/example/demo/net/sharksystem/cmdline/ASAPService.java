@@ -6,6 +6,8 @@ import com.example.demo.model.Mess;
 import com.example.demo.net.sharksystem.Utils;
 import com.example.demo.net.sharksystem.asap.*;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
@@ -22,6 +24,9 @@ public class ASAPService {
     private PrintStream standardOut = System.out;
     private PrintStream standardError = System.err;
     private OutputCollector outputCollector = new OutputCollector();
+
+    @Autowired
+    private SimpMessagingTemplate template;
 
     private TCPStream connectionAttempt = null ;
 
@@ -249,7 +254,7 @@ public class ASAPService {
     //createPeer
     private void createPeer(String name) throws IOException, ASAPException {
         ExampleASAPChunkReceivedListener asapChunkReceivedListener =
-                new ExampleASAPChunkReceivedListener(PEERS_ROOT_FOLDER + "/" + name);
+                new ExampleASAPChunkReceivedListener(PEERS_ROOT_FOLDER + "/" + name, template);
 
         ASAPPeer asapPeer = ASAPPeerFS.createASAPPeer(name, // peer name
                 PEERS_ROOT_FOLDER + "/" + name, // peer folder
