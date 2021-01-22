@@ -172,10 +172,15 @@ public class ServiceController {
 
 
 
-    @GetMapping(path = "/test")
-    public void getLogData (@Valid @NonNull @NotBlank @RequestParam(value = "peer") String peer, @Valid @NonNull @NotBlank @RequestParam(value = "storage")String storage,@Valid @NonNull @NotBlank @RequestParam(value = "uri")String uri) throws IOException, ASAPException {
-     asapService.getReceivedMessages(peer, storage,uri);
-
+    @GetMapping(path = "/received")
+    public List<ReceivedMess> getReceivedMess (@Valid @NonNull @NotBlank @RequestParam(value = "peer") String peer, @Valid @NonNull @NotBlank @RequestParam(value = "storage")String storage,@Valid @NonNull @NotBlank @RequestParam(value = "uri")String uri) {
+     try {
+         List<ReceivedMess> received = asapService.getReceivedMessages(peer,storage,uri);
+         return received;
+     } catch (IOException |ASAPException e) {
+         System.err.println(e);
+         return null;
+     }
     }
 
     @DeleteMapping (path = "/peers")
@@ -211,7 +216,7 @@ public class ServiceController {
 
 
     @GetMapping(path = "/setsendreceived")
-    public boolean dosetSendReceived (@Valid @NonNull @NotBlank @RequestParam(value = "peer") String peer, @Valid @NonNull @NotBlank @RequestParam(value = "storage") String storage,@Valid @NonNull @NotBlank @RequestParam(value = "value") boolean value) {
+    public boolean doSetSendReceived (@Valid @NonNull @NotBlank @RequestParam(value = "peer") String peer, @Valid @NonNull @NotBlank @RequestParam(value = "storage") String storage,@Valid @NonNull @NotBlank @RequestParam(value = "value") boolean value) {
         try {
             asapService.doSetSendReceivedMessage(peer,storage,value);
             return true;

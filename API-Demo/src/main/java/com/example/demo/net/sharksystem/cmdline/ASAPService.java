@@ -3,6 +3,7 @@ package com.example.demo.net.sharksystem.cmdline;
 import com.example.demo.model.Channel;
 import com.example.demo.model.ConnectionResponse;
 import com.example.demo.model.Mess;
+import com.example.demo.model.ReceivedMess;
 import com.example.demo.net.sharksystem.Utils;
 import com.example.demo.net.sharksystem.asap.*;
 
@@ -225,21 +226,32 @@ public class ASAPService {
     }
 
     //TODO
-    public void getReceivedMessages(String peername, String appname, String uri) throws IOException, ASAPException {
+    public List<ReceivedMess> getReceivedMessages(String peername, String appname, String uri) throws IOException, ASAPException {
         ASAPStorage asapStorage = this.getEngine(peername, appname);
+        List<ReceivedMess> receivedMessList = new ArrayList<>();
         List<CharSequence> senderList = asapStorage.getSender();
         System.out.println(senderList.toString());
+
         for (CharSequence sender : senderList) {
+            ReceivedMess received = new ReceivedMess();
+
             System.out.println("Sender: " + sender.toString());
+            received.setSender(sender);
+
             ASAPChunkStorage receivedStorage = asapStorage.getReceivedChunksStorage(sender);
             Iterator<CharSequence> mess = receivedStorage.getASAPMessages(uri).getMessagesAsCharSequence();
-            while (mess.hasNext()) {
-                System.out.println("Messages:" + mess.next().toString());
-            }
 
+            List<CharSequence> receivedMess = new ArrayList<>();
+            while (mess.hasNext()) {
+                receivedMess.add(mess.next());
+            }
+            received.setMessages(receivedMess);
+
+            receivedMessList.add(received);
 
         }
 
+        return receivedMessList;
 
     }
 

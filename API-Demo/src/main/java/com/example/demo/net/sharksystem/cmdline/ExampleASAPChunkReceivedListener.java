@@ -1,5 +1,6 @@
 package com.example.demo.net.sharksystem.cmdline;
 
+import com.example.demo.model.ReceivedMess;
 import com.example.demo.net.sharksystem.asap.ASAPChunkReceivedListener;
 import com.example.demo.net.sharksystem.asap.ASAPMessages;
 import com.example.demo.net.sharksystem.asap.util.Helper;
@@ -38,10 +39,17 @@ public class ExampleASAPChunkReceivedListener implements ASAPChunkReceivedListen
         ASAPMessages receivedMessages =
                 Helper.getMessagesByChunkReceivedInfos(format, sender, uri, this.rootFolder, era);
 
+        ReceivedMess receivedObj = new ReceivedMess();
+
         Iterator<CharSequence> mess = receivedMessages.getMessagesAsCharSequence();
+        List<CharSequence> receivedMess = new ArrayList<>();
         while (mess.hasNext()) {
-            System.out.println("Got new received Messages:" + mess.next().toString());
+            receivedMess.add(mess.next());
         }
+        receivedObj.setMessages(receivedMess);
+        receivedObj.setSender(sender);
+
+        this.template.convertAndSend("/received/message/"+uri,receivedObj);
 
 
 
