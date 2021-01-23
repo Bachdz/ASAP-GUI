@@ -35,7 +35,7 @@ public class ExampleASAPChunkReceivedListener implements ASAPChunkReceivedListen
         this.receivedList.add(received);
         System.out.println("Notify the app about new received chunk");
         this.template.convertAndSend("/received/user",received);
-    //TODO
+        //TODO
         ASAPMessages receivedMessages =
                 Helper.getMessagesByChunkReceivedInfos(format, sender, uri, this.rootFolder, era);
 

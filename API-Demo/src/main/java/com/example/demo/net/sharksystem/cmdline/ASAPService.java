@@ -58,7 +58,7 @@ public class ASAPService {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     public void doStart() throws IOException, ASAPException {
-//        this.setOutStreams();
+        this.setOutStreams();
         this.doInitializeASAPStorages();
 
     }
@@ -108,13 +108,13 @@ public class ASAPService {
             String channelName = host+":" +port;
             TCPStream channel = this.streams.remove(channelName);
             if (channel == null) {
-                this.standardError.println("channel does not exist: " + channelName);
+                System.err.println("channel does not exist: " + channelName);
                 return;
             }
-            this.standardOut.println("kill connection to: "+ channelName);
+            System.out.println("kill connection to: "+ channelName);
             channel.kill();
 
-            this.standardOut.println(".. done");
+            System.out.println(".. done");
         } catch (Exception e) {
             System.err.println(e);
         }
@@ -127,13 +127,13 @@ public class ASAPService {
             String channelName = "server:" + port;
             TCPStream channel = this.streams.remove(channelName);
             if (channel == null) {
-                this.standardError.println("channel does not exist: " + channelName);
+                System.err.println("channel does not exist: " + channelName);
                 return;
             }
-            this.standardOut.println("kill "+ channelName);
+            System.out.println("kill "+ channelName);
             channel.kill();
 
-            this.standardOut.println(".. done");
+            System.out.println(".. done");
         } catch (Exception e) {
             System.err.println(e);
         }
