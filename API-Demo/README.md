@@ -10,8 +10,3 @@ This demo was generated with [SpringBoot]
 
 Run class `DemoApplication` to start the spring boot application. By default the server will run on `http://localhost:8080/`
 
-### Available HTTP-Request
-- Create new peer : POST-Request. Example: `localhost:8080/api/v1/asap/peer?name=Alice`
-- Create new app : POST-Request. Example: `localhost:8080/api/v1/asap/app?peer=Alice&app=chat`
-
-
