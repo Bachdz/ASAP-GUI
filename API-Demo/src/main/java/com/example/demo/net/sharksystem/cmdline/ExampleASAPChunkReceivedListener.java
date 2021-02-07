@@ -53,17 +53,8 @@ public class ExampleASAPChunkReceivedListener implements ASAPChunkReceivedListen
         //notify that there is new message in @uri
         this.template.convertAndSend("/received/message/"+uri, received);
 
-
-
         //notify app that channel should reload
-        this.template.convertAndSend("/app/channel/"+format, received);
-
-
-        //notify app that era should reload
-        this.template.convertAndSend("/app/era/"+format, received);
-
-
-
+        this.template.convertAndSend("/received/channel/"+format, received);
 
     }
 

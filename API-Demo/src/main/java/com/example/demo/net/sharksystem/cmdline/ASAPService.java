@@ -55,7 +55,7 @@ public class ASAPService {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     public void doStart() throws IOException, ASAPException {
-        this.setOutStreams();
+//        this.setOutStreams();
         this.doInitializeASAPStorages();
 
     }

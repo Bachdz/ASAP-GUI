@@ -139,6 +139,8 @@ public abstract class ASAPEngine extends ASAPStorageImpl implements ASAPStorage,
                     copyChunk.clone(chunk);
                 }
 
+
+
                 System.out.println(this.getLogStart() + "era incremented");
             } catch (IOException ex) {
                 sb.append("IOException while incrementing era: ");
