@@ -1,9 +1,6 @@
 package com.example.demo.net.sharksystem.cmdline;
 
-import com.example.demo.model.Channel;
-import com.example.demo.model.ConnectionResponse;
-import com.example.demo.model.Mess;
-import com.example.demo.model.ReceivedMess;
+import com.example.demo.model.*;
 import com.example.demo.net.sharksystem.Utils;
 import com.example.demo.net.sharksystem.asap.*;
 
@@ -29,7 +26,7 @@ public class ASAPService {
     @Autowired
     private SimpMessagingTemplate template;
 
-    private TCPStream connectionAttempt = null ;
+    private TCPStream connectionAttempt = null;
 
     public static final String PEERS_ROOT_FOLDER = "src/asapPeers";
     private Map<String, ASAPPeer> peers = new HashMap();
@@ -73,7 +70,7 @@ public class ASAPService {
             if (this.startTCPStream(name, stream, engineName)) {
 
                 String thisAddress = InetAddress.getLocalHost().toString();
-                ConnectionResponse connectionResponse = new ConnectionResponse(engineName,thisAddress,port,true);
+                ConnectionResponse connectionResponse = new ConnectionResponse(engineName, thisAddress, port, true);
                 return connectionResponse;
             } else {
                 return null;
@@ -90,7 +87,7 @@ public class ASAPService {
             TCPStream stream = new TCPStream(remoteHost, remotePort, false, name);
             this.streams.put(name, stream);
             if (this.startTCPStream(name, stream, engineName)) {
-                ConnectionResponse connectionResponse = new ConnectionResponse(engineName,remoteHost,remotePort,true);
+                ConnectionResponse connectionResponse = new ConnectionResponse(engineName, remoteHost, remotePort, true);
                 return connectionResponse;
             } else {
                 return null;
@@ -103,15 +100,15 @@ public class ASAPService {
         }
     }
 
-    public void doKillConnectionAttempt (String host, int port) throws ASAPException{
+    public void doKillConnectionAttempt(String host, int port) throws ASAPException {
         try {
-            String channelName = host+":" +port;
+            String channelName = host + ":" + port;
             TCPStream channel = this.streams.remove(channelName);
             if (channel == null) {
                 System.err.println("channel does not exist: " + channelName);
                 return;
             }
-            System.out.println("kill connection to: "+ channelName);
+            System.out.println("kill connection to: " + channelName);
             channel.kill();
 
             System.out.println(".. done");
@@ -130,7 +127,7 @@ public class ASAPService {
                 System.err.println("channel does not exist: " + channelName);
                 return;
             }
-            System.out.println("kill "+ channelName);
+            System.out.println("kill " + channelName);
             channel.kill();
 
             System.out.println(".. done");
@@ -178,11 +175,17 @@ public class ASAPService {
         asapStorage.add(uri, messages);
     }
 
+//    public int getReceived(String peername, String appname) throws IOException, ASAPException {
+//        ASAPStorage asapStorage = this.getEngine(peername, appname);
+//
+//
+//
+//    }
 
-    public Collection<Integer> doGetEras(String peername, String appname) {
-        String dir = this.PEERS_ROOT_FOLDER + "/" + peername + "/" + appname;
-        Collection<Integer> erasInFolder = Utils.getErasInFolder(dir);
-        return erasInFolder;
+
+    public int getCurrentEra(String peername, String appname) throws IOException, ASAPException {
+        ASAPStorage asapStorage = this.getEngine(peername, appname);
+        return asapStorage.getEra();
     }
 
 
@@ -225,27 +228,93 @@ public class ASAPService {
         return storages;
     }
 
+
+    public List<MessByChunk> getMessagesByChunk(String peername, String appname, String uri) throws IOException, ASAPException {
+        ASAPStorage asapStorage = this.getEngine(peername, appname);
+
+        // get all Eras in that storage
+        String dir = this.PEERS_ROOT_FOLDER + "/" + peername + "/" + appname;
+        Collection<Integer> erasInFolder = Utils.getErasInFolder(dir);
+
+        List<MessByChunk> returnArray = new ArrayList<>();
+
+        //loop through all Eras
+        for (int i : erasInFolder) {
+
+            //get chunk out of that era
+            ASAPChunk chunk = asapStorage.getChunkStorage().getChunk(uri, i);
+
+            List<CharSequence> messArray = new ArrayList<>();
+
+            //get all messages in that chunk
+            Iterator<CharSequence> mess = chunk.getMessagesAsCharSequence();
+
+            //save to array
+            while (mess.hasNext()) {
+                messArray.add(mess.next());
+            }
+
+            //create return object
+            MessByChunk returnMess = new MessByChunk(i, messArray);
+
+            //add obj to return array
+            returnArray.add(returnMess);
+        }
+
+        return returnArray;
+
+    }
+
+
     //TODO
     public List<ReceivedMess> getReceivedMessages(String peername, String appname, String uri) throws IOException, ASAPException {
         ASAPStorage asapStorage = this.getEngine(peername, appname);
         List<ReceivedMess> receivedMessList = new ArrayList<>();
         List<CharSequence> senderList = asapStorage.getSender();
-        System.out.println(senderList.toString());
 
+
+//        System.out.println(senderList.toString());
+        //lop through all sender
         for (CharSequence sender : senderList) {
-            ReceivedMess received = new ReceivedMess();
 
-            System.out.println("Sender: " + sender.toString());
-            received.setSender(sender);
+            List<MessByChunk> chunksList = new ArrayList<>();
 
-            ASAPChunkStorage receivedStorage = asapStorage.getReceivedChunksStorage(sender);
-            Iterator<CharSequence> mess = receivedStorage.getASAPMessages(uri).getMessagesAsCharSequence();
 
-            List<CharSequence> receivedMess = new ArrayList<>();
-            while (mess.hasNext()) {
-                receivedMess.add(mess.next());
+            // get all Eras in that sender storage
+            String dir = this.PEERS_ROOT_FOLDER + "/" + peername + "/" + appname + "/" + sender;
+            Collection<Integer> erasInFolder = Utils.getErasInFolder(dir);
+
+            //loop through all Eras
+            for (int i : erasInFolder) {
+                List<CharSequence> messList = new ArrayList<>();
+
+                //Get Received Storage
+                ASAPChunkStorage receivedStorage = asapStorage.getReceivedChunksStorage(sender);
+
+                //get Chunk out of Uri and Era
+                ASAPChunk chunk = receivedStorage.getChunk(uri, i);
+
+
+                //get all messages in that chunk
+                Iterator<CharSequence> mess = chunk.getMessagesAsCharSequence();
+
+                //save to array
+                while (mess.hasNext()) {
+                    messList.add(mess.next());
+                }
+
+                //create return object
+                MessByChunk returnChunk = new MessByChunk(i, messList);
+                chunksList.add(returnChunk);
             }
-            received.setMessages(receivedMess);
+
+
+            //create new received object
+            ReceivedMess received = new ReceivedMess();
+            received.setSender(sender);
+            received.setChunks(chunksList);
+
+
 
             receivedMessList.add(received);
 
@@ -256,7 +325,6 @@ public class ASAPService {
     }
 
     public Iterator<CharSequence> getMessages(String peername, String appname, String uri) throws IOException, ASAPException {
-
         ASAPStorage asapStorage = this.getEngine(peername, appname);
         ASAPChannel channel = asapStorage.getChannel(uri);
 
@@ -290,7 +358,6 @@ public class ASAPService {
         if (asapPeer == null) {
             throw new ASAPException("engine does not exist: " + peerName);
         }
-
         return asapPeer;
     }
 
@@ -370,7 +437,6 @@ public class ASAPService {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-
     public void doList() throws ASAPException {
         this.standardOut.println("connections:");
         for (String connectionName : this.streams.keySet()) {
@@ -438,6 +504,7 @@ public class ASAPService {
         }
     }
 
+
     public void doInitializeASAPStorages() throws IOException, ASAPException {
         // set up peers
         File rootFolder = new File(PEERS_ROOT_FOLDER);
@@ -451,7 +518,6 @@ public class ASAPService {
             }
         }
     }
-
 
 
     public Map<String, ASAPPeer> doPrintAllInformation() throws ASAPException {

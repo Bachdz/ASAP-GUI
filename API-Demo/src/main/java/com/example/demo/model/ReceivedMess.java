@@ -4,14 +4,14 @@ import java.util.List;
 
 public class ReceivedMess {
     private CharSequence sender;
-    private List<CharSequence> messages;
+    private List<MessByChunk> chunks;
 
 
     public ReceivedMess() {}
 
-    public ReceivedMess(CharSequence sender, List<CharSequence> messages) {
+    public ReceivedMess(CharSequence sender, List<MessByChunk> chunks) {
         this.sender = sender;
-        this.messages = messages;
+        this.chunks = chunks;
     }
 
 
@@ -23,11 +23,11 @@ public class ReceivedMess {
         this.sender = sender;
     }
 
-    public List<CharSequence> getMessages() {
-        return messages;
+    public List<MessByChunk> getChunk() {
+        return chunks;
     }
 
-    public void setMessages(List<CharSequence> messages) {
-        this.messages = messages;
+    public void setChunks(List<MessByChunk> messages) {
+        this.chunks = messages;
     }
 }

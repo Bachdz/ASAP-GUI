@@ -35,21 +35,33 @@ public class ExampleASAPChunkReceivedListener implements ASAPChunkReceivedListen
         this.receivedList.add(received);
         System.out.println("Notify the app about new received chunk");
         this.template.convertAndSend("/received/user",received);
-        //TODO
-        ASAPMessages receivedMessages =
-                Helper.getMessagesByChunkReceivedInfos(format, sender, uri, this.rootFolder, era);
 
-        ReceivedMess receivedObj = new ReceivedMess();
+//        //TODO
+//        ASAPMessages receivedMessages =
+//                Helper.getMessagesByChunkReceivedInfos(format, sender, uri, this.rootFolder, era);
+//
+//        ReceivedMess receivedObj = new ReceivedMess();
+//
+//        Iterator<CharSequence> mess = receivedMessages.getMessagesAsCharSequence();
+//        List<CharSequence> receivedMess = new ArrayList<>();
+//        while (mess.hasNext()) {
+//            receivedMess.add(mess.next());
+//        }
+//        receivedObj.setMessages(receivedMess);
+//        receivedObj.setSender(sender);
+//
+        //notify that there is new message in @uri
+        this.template.convertAndSend("/received/message/"+uri, received);
 
-        Iterator<CharSequence> mess = receivedMessages.getMessagesAsCharSequence();
-        List<CharSequence> receivedMess = new ArrayList<>();
-        while (mess.hasNext()) {
-            receivedMess.add(mess.next());
-        }
-        receivedObj.setMessages(receivedMess);
-        receivedObj.setSender(sender);
 
-        this.template.convertAndSend("/received/message/"+uri,receivedObj);
+
+        //notify app that channel should reload
+        this.template.convertAndSend("/app/channel/"+format, received);
+
+
+        //notify app that era should reload
+        this.template.convertAndSend("/app/era/"+format, received);
+
 
 
 

@@ -9,10 +9,12 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.boot.context.event.ApplicationStartedEvent;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
+import org.springframework.http.HttpStatus;
 import org.springframework.lang.NonNull;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
@@ -254,10 +256,15 @@ public class ServiceController {
     }
 
 
-    @GetMapping(path = "/eras")
-    public Collection<Integer> getEras (@Valid @NonNull @NotBlank @RequestParam(value = "peer") String peer, @Valid @NonNull @NotBlank @RequestParam(value = "storage") String storage){
-        Collection<Integer> eras = asapService.doGetEras(peer,storage);
-        return eras ;
+    @GetMapping(path = "/era")
+    public int getEras (@Valid @NonNull @NotBlank @RequestParam(value = "peer") String peer, @Valid @NonNull @NotBlank @RequestParam(value = "storage") String storage){
+        try{
+            int era = asapService.getCurrentEra(peer,storage);
+            return era;
+        } catch (IOException | ASAPException e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.toString());
+
+        }
     }
 
 
@@ -267,8 +274,12 @@ public class ServiceController {
     }
 
     @GetMapping(path = "/messages")
-    public Iterator<CharSequence> getMessages (@Valid @NonNull @NotBlank @RequestParam(value = "peer") String peer, @Valid @NonNull @NotBlank @RequestParam (value = "storage")String storage , @Valid @NonNull @NotBlank @RequestParam(value = "uri") String uri) throws IOException, ASAPException {
-        return asapService.getMessages(peer, storage,uri);
+    public List<MessByChunk> getMessages (@Valid @NonNull @NotBlank @RequestParam(value = "peer") String peer, @Valid @NonNull @NotBlank @RequestParam (value = "storage")String storage , @Valid @NonNull @NotBlank @RequestParam(value = "uri") String uri) {
+        try {
+            return asapService.getMessagesByChunk(peer, storage,uri);
+        } catch (IOException | ASAPException e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.toString());
+        }
     }
 
 }
