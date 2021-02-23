@@ -13,6 +13,8 @@ public class Channel {
             this.recipients = recipients;
         }
 
+        public Channel() {}
+
         public CharSequence getUri () {
             return this.uri;
         }
