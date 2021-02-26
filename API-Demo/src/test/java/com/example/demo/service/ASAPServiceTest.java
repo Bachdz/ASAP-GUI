@@ -1,51 +1,94 @@
 package com.example.demo.service;
 
 import com.example.demo.service.asap.*;
+import org.junit.Before;
 import org.junit.jupiter.api.Test;
+import org.junit.runner.RunWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.test.context.junit4.SpringRunner;
 
 import java.io.IOException;
 
 import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+@RunWith(SpringRunner.class)
+@SpringBootTest
 class ASAPServiceTest {
 
-    private ASAPService asapService=mock(ASAPService.class);
     private ASAPStorage asapStorage=mock(ASAPStorage.class);
 
-//    private System system = mock(System.class);
     private OutputCollector outputCollector = new OutputCollector();
 
-
-    private  ASAPPeerFS asapPeerFS= mock(ASAPPeerFS.class);
     private  ASAPPeer asapPeer= mock(ASAPPeer.class);
-    public static final String PEERS_TEST_ROOT_FOLDER = "src/test/asapPeersTest";
+
+
+
+    @Autowired
+    private ASAPService serviceTest;
+
+    @Before
+    public void setUp() throws IOException, ASAPException {
+//        serviceTest.doStart();
+    }
 
     @Autowired
     private SimpMessagingTemplate template;
 
     @Test
     void doStart() throws IOException, ASAPException {
-//        verify(asapService,  times(1)).doInitializeASAPStorages();
+//        serviceTest.doStart();
+        ASAPService asapService=mock(ASAPService.class);
+
+        asapService.doStart();
+
+        verify(asapService,  times(1)).doStart();
+
     }
+
+
     @Test
     void doCreateASAPPeer() throws IOException, ASAPException {
-        String name = "test";
+        String PEERS_TEST_ROOT_FOLDER = "src/test/asapPeersTest";
+        String name = "test123456";
+
+
+        ASAPPeerFS asapPeerFS= mock(ASAPPeerFS.class);
+
+        serviceTest.doCreateASAPPeer("test1345");
+
+
         ChunkReceivedListener chunkReceivedListener = new ChunkReceivedListener(PEERS_TEST_ROOT_FOLDER + "/" + name, template);
-        // erwartet dass die Funktion cretaeASAPPeer einmal aufgerufen wird
-        verify(asapPeerFS,  times(1)).createASAPPeer(name,PEERS_TEST_ROOT_FOLDER+"/"+name,chunkReceivedListener);
+
+//        when(asapPeerFS.createASAPPeer(name,PEERS_TEST_ROOT_FOLDER+"/"+name,chunkReceivedListener)).thenReturn(null);
+
+
+        // erwartet dass die Funktion cretaeASAPPeer aufgerufen wird
+        verify(asapPeerFS).createASAPPeer(name,PEERS_TEST_ROOT_FOLDER+"/"+name,chunkReceivedListener);
+//        verify(asapPeerFS).newEra();
     }
 
-    @Test
-    void getCurrentEra() throws IOException, ASAPException {
-        String peername="test";
-        String appname="testapp";
-
-        verify(asapPeer,  times(1)).getEngineByFormat("testapp");
-
-    }
+//    @Test
+//    void getCurrentEra() throws IOException, ASAPException {
+//        String peerName="test";
+//        String appName="testapp";
+//        ASAPPeer asapPeer= mock(ASAPPeer.class);
+//
+//        when(serviceTest.getCurrentEra(peerName,appName)).thenReturn(2);
+//
+////        serviceTest.getCurrentEra(peerName,appName);
+//
+//        assertEquals(2,serviceTest.getCurrentEra(peerName,appName));
+//
+//
+//
+////        verify(asapPeer,  times(1)).getEngineByFormat(appName);
+//
+//    }
 
     @Test
     void doOpen() {
