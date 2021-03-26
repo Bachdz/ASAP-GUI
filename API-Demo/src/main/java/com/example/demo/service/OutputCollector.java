@@ -10,13 +10,16 @@ public class OutputCollector extends OutputStream {
     private StringBuilder buffer = new StringBuilder();
     @Override
     public void write(int b) throws IOException {
+        try {
+            if (b == '\n') {
 
-        if (b == '\n') {
-
-            lines.add(buffer.toString());
-            buffer = new StringBuilder();
-        } else if (b != '\r'){
-            buffer.append((char) b);
+                lines.add(buffer.toString());
+                buffer = new StringBuilder();
+            } else if (b != '\r') {
+                buffer.append((char) b);
+            }
+        } catch (Exception e) {
+            throw new IOException("Couldn't write output stream "+ e);
         }
     }
 

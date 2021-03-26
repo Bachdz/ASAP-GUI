@@ -1,12 +1,9 @@
 package com.example.demo.controller;
-
 import com.example.demo.model.*;
 import com.example.demo.service.ASAPService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,21 +11,22 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.web.servlet.MockMvc;
-
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-
-import java.io.IOException;
 import java.util.*;
 
-import static org.mockito.ArgumentMatchers.isA;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import static org.mockito.Mockito.*;
 
-
+/**
+ * This class is used to test the REST-Controller
+ * @author Bach Do
+ */
 @SpringBootTest
 @RunWith(SpringJUnit4ClassRunner.class)
-public class ServiceControllerTest {
+public class RestControllerTest {
     private MockMvc mockMvc;
 
     @Autowired
@@ -38,21 +36,19 @@ public class ServiceControllerTest {
     @Mock
     private ASAPService asapService;
 
-    @InjectMocks
-    private ServiceController serviceController;
-
-
     @Before
     public void setUp() {
         MockitoAnnotations.initMocks(this);
-
         mockMvc = MockMvcBuilders.standaloneSetup(new ServiceController(asapService))
                 .build();
     }
 
+    /**
+    * Test endpoint for creating new peer
+    */
     @Test
     public void createPeer() throws Exception {
-        // test proper action, expect 200 and json content
+        // test perform proper action, expect 200 and json content
         mockMvc.perform(
                 MockMvcRequestBuilders.post("/api/v1/asap/peer?name=test")
         )
@@ -66,8 +62,6 @@ public class ServiceControllerTest {
                 .andExpect(MockMvcResultMatchers.status().isBadRequest());
 
         verify(asapService,times(1)).doCreateASAPPeer("test");
-
-
     }
 
     @Test(expected = Exception.class)
@@ -113,13 +107,12 @@ public class ServiceControllerTest {
 
     @Test
     public void createChannel() throws Exception {
-
-
         Object randomObj = new Object() {
             public final String uri = "uri://test";
             public final Set<CharSequence> recipients = new HashSet<CharSequence>(Arrays.asList("test1", "test2"));
         };
         String json = objectMapper.writeValueAsString(randomObj);
+
         // perfrom proper action, expect 200 and posted json object as response
         mockMvc.perform(
                 MockMvcRequestBuilders.post("/api/v1/asap/channel?peer=test&app=test").content(json).contentType(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON))
@@ -137,34 +130,27 @@ public class ServiceControllerTest {
                 MockMvcRequestBuilders.post("/api/v1/asap/channel?peer=test&app=test").contentType(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest());
     }
-
+    /**
+     * Test endpoint for creating new messages
+     */
     @Test
     public void createMessages() throws Exception {
-        Object randomObj = new Object() {
-            public final String mess  = "This is a test message";
-        };
-
-
-        String json = objectMapper.writeValueAsString(randomObj);
-
+        Message mess = new Message("This is a test message") ;
+        String json = objectMapper.writeValueAsString(mess);
         // perform proper action, expect 200 and posted json object as response
         mockMvc.perform(
                 MockMvcRequestBuilders.post("/api/v1/asap/addmessages?peer=test&app=test&uri=test").content(json).contentType(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON))
 
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.content().json(json));
-
         // perform action with bad query variable, expect bad request status 400
         mockMvc.perform(
                 MockMvcRequestBuilders.post("/api/v1/asap/addmessages?app=test").content(json).contentType(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest());
-
         // perform action without body content, expect bad request status 400
         mockMvc.perform(
                 MockMvcRequestBuilders.post("/api/v1/asap/addmessages?peer=test&app=test&uri=test").contentType(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest());
-
-
     }
 
     @Test
@@ -289,7 +275,7 @@ public class ServiceControllerTest {
 
         String expectedJson = objectMapper.writeValueAsString(expectedReturnList);
 
-        when(asapService.getPeers()).thenReturn(Arrays.asList("testPeer1","testPeer2"));
+        when(asapService.getPeers()).thenReturn(Arrays.asList(peer1,peer2));
 
 
         //expect response

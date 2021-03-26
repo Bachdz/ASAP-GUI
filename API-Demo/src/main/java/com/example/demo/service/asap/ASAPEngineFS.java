@@ -251,7 +251,7 @@ public class ASAPEngineFS extends ASAPEngine {
                     try {
                         if(!fileInDir.delete()) {
                             System.out.println("ASAPEngineFS: cannot delete file (try deleteOnExit):" + fileInDir);
-                            throw new Error();
+                            throw new Error("ASAPEngineFS: cannot delete file (try deleteOnExit):" + fileInDir);
                         }
                     } catch (RuntimeException e) {
                         System.err.println("ASAPEngineFS: cannot file:" + e.getLocalizedMessage());

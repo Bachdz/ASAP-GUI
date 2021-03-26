@@ -14,7 +14,11 @@ import javax.validation.constraints.NotBlank;
 import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.*;
-
+/**
+ * This class work as a controller API. The REST-requests will be sorted to the corresponding endpoint. Then the service
+ * class will be called to perform the logic action.
+ * @author Bach Do
+ */
 @RequestMapping("api/v1/asap")
 @RestController
 public class ServiceController {
@@ -38,7 +42,7 @@ public class ServiceController {
             asapService.doCreateASAPPeer(name);
             Peer peer = new Peer(name);
              return peer;
-        } catch (ASAPException e) {
+        } catch (ASAPException | IOException e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.toString());
         }
     }
@@ -53,7 +57,7 @@ public class ServiceController {
             asapService.doCreateASAPApp(name, app);
             App storage = new App(app);
             return storage;
-        } catch (ASAPException e) {
+        } catch (ASAPException | IOException e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.toString());
         }
     }
@@ -64,7 +68,7 @@ public class ServiceController {
            try {
                asapService.doCreateASAPChannel(peerName,appName,newChannel);
                return newChannel;
-           } catch (ASAPException e) {
+           } catch (ASAPException | IOException e) {
                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.toString());
            }
 
@@ -88,7 +92,6 @@ public class ServiceController {
             asapService.doKillConnectionAttempt(host,port);
             return true;
         } catch (ASAPException e) {
-//            System.err.println("Something went wrong: " + e);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.toString());
         }
     }
@@ -102,7 +105,6 @@ public class ServiceController {
         } catch (Exception e) {
             System.err.println("Something went wrong" + e);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.toString());
-//            return false;
         }
     }
 
@@ -145,13 +147,11 @@ public class ServiceController {
 
     @GetMapping(path = "/peers")
     public List<Peer> getPeers () {
-        List<String> peerStorage= asapService.getPeers();
-        List<Peer> peers = new ArrayList<Peer>() ;
-        for(String peerName : peerStorage) {
-           Peer peer = new Peer(peerName);
-            peers.add(peer);
+        try {
+            return asapService.getPeers();
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.toString());
         }
-        return peers;
     }
 
     @GetMapping(path = "/logdata")
@@ -212,7 +212,7 @@ public class ServiceController {
         try {
             asapService.doSetSendReceivedMessage(peer,storage,value);
             return true;
-        } catch (ASAPException e) {
+        } catch (ASAPException | IOException e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.toString());
         }
     }
@@ -229,7 +229,11 @@ public class ServiceController {
 
     @GetMapping(path = "/storages")
     public List<App> getStorages (@Valid @NonNull @NotBlank @RequestParam(value = "peer", required = true) String peer) {
-        return  asapService.getStorages(peer);
+        try {
+            return asapService.getStorages(peer);
+        } catch (Exception e ){
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.toString());
+        }
     }
 
 
